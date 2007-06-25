@@ -3,7 +3,7 @@
  *
  *   Image handling routines for HTMLDOC, a HTML document processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -234,13 +234,13 @@ gif_get_code(FILE *fp,		/* I - File to read from */
     * Just initialize the input buffer...
     */
 
-    curbit  = 0;
-    lastbit = 0;
-    done    = 0;
+    curbit    = 0;
+    lastbit   = 0;
+    last_byte = 0;
+    done      = 0;
 
     return (0);
   }
-
 
   if ((curbit + code_size) >= lastbit)
   {
@@ -557,48 +557,54 @@ image_compare(image_t **img1,	/* I - First image */
  */
 
 void
-image_copy(const char *filename,/* I - Source file */
-           const char *destpath)/* I - Destination path */
+image_copy(const char *src,		/* I - Source file */
+           const char *realsrc,		/* I - Real source file */
+           const char *destpath)	/* I - Destination path */
 {
-  char	dest[255];		/* Destination file */
-  FILE	*in, *out;		/* Input/output files */
-  uchar	buffer[8192];		/* Data buffer */
-  int	nbytes;			/* Number of bytes in buffer */
+  char		dest[255];		/* Destination file */
+  FILE		*in, *out;		/* Input/output files */
+  uchar		buffer[8192];		/* Data buffer */
+  int		nbytes;			/* Number of bytes in buffer */
 
+
+  if (!src || !realsrc || !destpath)
+    return;
 
  /*
   * Figure out the destination filename...
   */
 
-  if (strcmp(destpath, ".") == 0)
-  {
-    strncpy(dest, file_basename(filename), sizeof(dest) - 1);
-    dest[sizeof(dest) - 1] = '\0';
-  }
+  if (!strcmp(destpath, "."))
+    strlcpy(dest, file_basename(src), sizeof(dest));
   else
-    snprintf(dest, sizeof(dest), "%s/%s", destpath, file_basename(filename));
+    snprintf(dest, sizeof(dest), "%s/%s", destpath, file_basename(src));
 
-  if (strcmp(dest, filename) == 0)
+  if (!strcmp(dest, realsrc))
     return;
 
  /*
   * Open files and copy...
   */
 
-  if ((filename = file_find(Path, filename)) == NULL)
+  if ((in = fopen(realsrc, "rb")) == NULL)
+  {
+    progress_error(HD_ERROR_READ_ERROR, "Unable to open \"%s\" - %s",
+                   realsrc, strerror(errno));
     return;
-
-  if ((in = fopen(filename, "rb")) == NULL)
-    return;
+  }
 
   if ((out = fopen(dest, "wb")) == NULL)
   {
+    progress_error(HD_ERROR_READ_ERROR, "Unable to create \"%s\" - %s",
+                   dest, strerror(errno));
     fclose(in);
     return;
   }
 
   while ((nbytes = fread(buffer, 1, sizeof(buffer), in)) > 0)
     fwrite(buffer, 1, nbytes, out);
+
+  progress_error(HD_ERROR_NONE, "BYTES: %ld", ftell(out));
 
   fclose(in);
   fclose(out);
@@ -634,7 +640,7 @@ image_find(const char *filename,/* I - Name of image file */
 
   if (num_images > 0)
   {
-    strcpy(key.filename, filename);
+    strlcpy(key.filename, filename, sizeof(key.filename));
     keyptr = &key;
 
     match = (image_t **)bsearch(&keyptr, images, num_images, sizeof(image_t *),
@@ -743,8 +749,7 @@ image_load(const char *filename,/* I - Name of image file */
 
   if (num_images > 0)
   {
-    strncpy(key.filename, filename, sizeof(key.filename) - 1);
-    key.filename[sizeof(key.filename) - 1] = '\0';
+    strlcpy(key.filename, filename, sizeof(key.filename));
     keyptr = &key;
 
     match = (image_t **)bsearch(&keyptr, images, num_images, sizeof(image_t *),
@@ -839,7 +844,7 @@ image_load(const char *filename,/* I - Name of image file */
 
     images[num_images] = img;
 
-    strncpy(img->filename, filename, sizeof(img->filename) - 1);
+    strlcpy(img->filename, filename, sizeof(img->filename));
     img->use = 1;
   }
   else
@@ -857,7 +862,8 @@ image_load(const char *filename,/* I - Name of image file */
     status = image_load_jpeg(img, fp, gray, load_data);
   else
   {
-    progress_error(HD_ERROR_BAD_FORMAT, "Unknown image file format for \"%s\"!", filename);
+    progress_error(HD_ERROR_BAD_FORMAT, "Unknown image file format for \"%s\"!",
+                   file_rlookup(filename));
     fclose(fp);
     free(img);
     return (NULL);
@@ -867,7 +873,8 @@ image_load(const char *filename,/* I - Name of image file */
 
   if (status)
   {
-    progress_error(HD_ERROR_READ_ERROR, "Unable to load image file \"%s\"!", filename);
+    progress_error(HD_ERROR_READ_ERROR, "Unable to load image file \"%s\"!",
+                   file_rlookup(filename));
     if (!match)
       free(img);
     return (NULL);
@@ -944,6 +951,12 @@ image_load_bmp(image_t *img,	/* I - Image to load into */
   // Setup image and buffers...
   img->depth  = gray ? 1 : 3;
 
+  // If this image is indexed and we are writing an encrypted PDF file, bump the use count so
+  // we create an image object (Acrobat 6 bug workaround)
+  if (depth <= 8 && Encryption)
+    img->use ++;
+
+  // Return now if we only need the dimensions...
   if (!load_data)
     return (0);
 
@@ -1270,6 +1283,11 @@ image_load_gif(image_t *img,	/* I - Image pointer */
   img->height = (buf[9] << 8) | buf[8];
   ncolors     = 2 << (buf[10] & 0x07);
 
+  // If we are writing an encrypted PDF file, bump the use count so we create
+  // an image object (Acrobat 6 bug workaround)
+  if (Encryption)
+    img->use ++;
+
   if (buf[10] & GIF_COLORMAP)
     if (gif_read_cmap(fp, ncolors, cmap, &gray))
       return (-1);
@@ -1384,7 +1402,16 @@ image_load_jpeg(image_t *img,	/* I - Image pointer */
     cinfo.out_color_components = 1;
     cinfo.output_components    = 1;
   }
-  else
+  else if (cinfo.num_components != 3)
+  {
+    jpeg_destroy_decompress(&cinfo);
+
+    progress_error(HD_ERROR_BAD_FORMAT,
+                   "CMYK JPEG files are not supported! (%s)",
+		   file_rlookup(img->filename));
+    return (-1);
+  }
+  else             
   {
     cinfo.out_color_space      = JCS_RGB;
     cinfo.out_color_components = 3;
@@ -1499,6 +1526,23 @@ image_load_png(image_t *img,	/* I - Image pointer */
 
   png_read_info(pp, info);
 
+  if (info->color_type & PNG_COLOR_MASK_PALETTE)
+  {
+    png_set_expand(pp);
+
+    // If we are writing an encrypted PDF file, bump the use count so we create
+    // an image object (Acrobat 6 bug workaround)
+    if (Encryption)
+      img->use ++;
+  }
+  else if (info->bit_depth < 8)
+  {
+    png_set_packing(pp);
+    png_set_expand(pp);
+  }
+  else if (info->bit_depth == 16)
+    png_set_strip_16(pp);
+
   if (info->color_type & PNG_COLOR_MASK_COLOR)
   {
     depth      = 3;
@@ -1513,9 +1557,14 @@ image_load_png(image_t *img,	/* I - Image pointer */
   img->width  = info->width;
   img->height = info->height;
 
-  if (info->color_type & PNG_COLOR_MASK_ALPHA)
+  if ((info->color_type & PNG_COLOR_MASK_ALPHA) || info->num_trans)
   {
-    image_need_mask(img, PSLevel == 0 && PDFVersion >= 13 ? 4 : 2);
+    if ((PSLevel == 0 && PDFVersion >= 14) || PSLevel == 3)
+      image_need_mask(img, 8);
+    else if (PSLevel == 0 && PDFVersion == 13)
+      image_need_mask(img, 2);
+    else
+      image_need_mask(img);
 
     depth ++;
   }
@@ -1527,7 +1576,7 @@ image_load_png(image_t *img,	/* I - Image pointer */
     puts("    COLOR");
   else
     puts("    GRAYSCALE");
-  if (info->color_type & PNG_COLOR_MASK_ALPHA)
+  if ((info->color_type & PNG_COLOR_MASK_ALPHA) || info->num_trans)
     puts("    ALPHA");
   if (info->color_type & PNG_COLOR_MASK_PALETTE)
     puts("    PALETTE");
@@ -1540,14 +1589,6 @@ image_load_png(image_t *img,	/* I - Image pointer */
   }
 
   img->pixels = (uchar *)malloc(img->width * img->height * depth);
-
-  if ((info->color_type & PNG_COLOR_MASK_PALETTE) || info->bit_depth < 8)
-  {
-    png_set_packing(pp);
-    png_set_expand(pp);
-  }
-  else if (info->bit_depth == 16)
-    png_set_strip_16(pp);
 
  /*
   * Allocate pointers...
@@ -1569,7 +1610,7 @@ image_load_png(image_t *img,	/* I - Image pointer */
   * Generate the alpha mask as necessary...
   */
 
-  if (info->color_type & PNG_COLOR_MASK_ALPHA)
+  if ((info->color_type & PNG_COLOR_MASK_ALPHA) || info->num_trans)
   {
 #ifdef DEBUG
     for (inptr = img->pixels, i = 0; i < img->height; i ++)
@@ -1668,9 +1709,20 @@ image_need_mask(image_t *img,	/* I - Image to add mask to */
   */
 
   img->maskscale = scaling;
-  img->maskwidth = (img->width * scaling + 7) / 8;
-  size           = img->maskwidth * img->height * scaling;
-  
+
+  if (scaling == 8)
+  {
+    // Alpha image
+    img->maskwidth = img->width;
+    size           = img->width * img->height;
+  }
+  else
+  {
+    // Alpha mask
+    img->maskwidth = (img->width * scaling + 7) / 8;
+    size           = img->maskwidth * img->height * scaling;
+  }
+
   img->mask = (uchar *)calloc(size, 1);
 }
 
@@ -1692,57 +1744,42 @@ image_set_mask(image_t *img,	/* I - Image to operate on */
 		  0x80, 0x40, 0x20, 0x10,
 		  0x08, 0x04, 0x02, 0x01
 		};
-  static uchar	dither[16][16] = // Simple 16x16 Floyd dither
+  static uchar	dither[4][4] = // Simple 4x4 clustered-dot dither
 		{
-		 { 0,   128, 32,  160, 8,   136, 40,  168,
-		   2,   130, 34,  162, 10,  138, 42,  170 },
-		 { 192, 64,  224, 96,  200, 72,  232, 104,
-		   194, 66,  226, 98,  202, 74,  234, 106 },
-		 { 48,  176, 16,  144, 56,  184, 24,  152,
-		   50,  178, 18,  146, 58,  186, 26,  154 },
-		 { 240, 112, 208, 80,  248, 120, 216, 88,
-		   242, 114, 210, 82,  250, 122, 218, 90 },
-		 { 12,  140, 44,  172, 4,   132, 36,  164,
-		   14,  142, 46,  174, 6,   134, 38,  166 },
-		 { 204, 76,  236, 108, 196, 68,  228, 100,
-		   206, 78,  238, 110, 198, 70,  230, 102 },
-		 { 60,  188, 28,  156, 52,  180, 20,  148,
-		   62,  190, 30,  158, 54,  182, 22,  150 },
-		 { 252, 124, 220, 92,  244, 116, 212, 84,
-		   254, 126, 222, 94,  246, 118, 214, 86 },
-		 { 3,   131, 35,  163, 11,  139, 43,  171,
-		   1,   129, 33,  161, 9,   137, 41,  169 },
-		 { 195, 67,  227, 99,  203, 75,  235, 107,
-		   193, 65,  225, 97,  201, 73,  233, 105 },
-		 { 51,  179, 19,  147, 59,  187, 27,  155,
-		   49,  177, 17,  145, 57,  185, 25,  153 },
-		 { 243, 115, 211, 83,  251, 123, 219, 91,
-		   241, 113, 209, 81,  249, 121, 217, 89 },
-		 { 15,  143, 47,  175, 7,   135, 39,  167,
-		   13,  141, 45,  173, 5,   133, 37,  165 },
-		 { 207, 79,  239, 111, 199, 71,  231, 103,
-		   205, 77,  237, 109, 197, 69,  229, 101 },
-		 { 63,  191, 31,  159, 55,  183, 23,  151,
-		   61,  189, 29,  157, 53,  181, 21,  149 },
-		 { 254, 127, 223, 95,  247, 119, 215, 87,
-		   253, 125, 221, 93,  245, 117, 213, 85 }
-	       };
+		  { 0,  2,  15, 6 },
+		  { 4,  12, 9,  11 },
+		  { 14, 7,  1,  3 },
+		  { 8,  10, 5,  13 }
+	        };
 
 
   if (img == NULL || img->mask == NULL || x < 0 || x >= img->width ||
       y < 0 || y > img->height)
     return;
 
-  x *= img->maskscale;
-  y *= img->maskscale;
+  if (img->maskscale == 8)
+  {
+    // Store the alpha value directly...
+    if (PSLevel)
+      img->mask[y * img->maskwidth + x] = 255 - alpha;
+    else
+      img->mask[y * img->maskwidth + x] = alpha;
+  }
+  else
+  {
+    // Store an alpha mask...
+    x *= img->maskscale;
+    y *= img->maskscale;
+    alpha >>= 4;
 
-  for (i = 0; i < img->maskscale; i ++, y ++, x -= img->maskscale)
-    for (j = 0; j < img->maskscale; j ++, x ++)
-    {
-      maskptr  = img->mask + y * img->maskwidth + x / 8;
-      if (alpha <= dither[x & 15][y & 15])
-	*maskptr |= masks[x & 7];
-    }
+    for (i = 0; i < img->maskscale; i ++, y ++, x -= img->maskscale)
+      for (j = 0; j < img->maskscale; j ++, x ++)
+      {
+	maskptr  = img->mask + y * img->maskwidth + x / 8;
+	if (alpha <= dither[x & 3][y & 3])
+	  *maskptr |= masks[x & 7];
+      }
+  }
 }
 
 

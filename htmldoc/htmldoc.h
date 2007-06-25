@@ -3,7 +3,7 @@
  *
  *   Header file for HTMLDOC, a HTML document processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -138,7 +138,9 @@ enum	/* PDF document permissions */
 #endif /* _HTML_DOC_CXX_ */
 
 VAR int		Verbosity	VALUE(0);	/* Verbosity */
+VAR int		OverflowErrors	VALUE(0);	/* Show errors on overflow */
 VAR int		StrictHTML	VALUE(0);	/* Do strict HTML checking */
+VAR int		CGIMode		VALUE(0);	/* Running as CGI? */
 VAR int		Errors		VALUE(0);	/* Number of errors */
 VAR int		Compression	VALUE(1);	/* Non-zero means compress PDFs */
 VAR int		TitlePage	VALUE(1),	/* Need a title page */
@@ -148,7 +150,7 @@ VAR int		TitlePage	VALUE(1),	/* Need a title page */
 		TocDocCount	VALUE(0);	/* Number of chapters */
 VAR int		OutputType	VALUE(OUTPUT_BOOK);
 						/* Output a "book", etc. */
-VAR char	OutputPath[255]	VALUE("");	/* Output directory/name */
+VAR char	OutputPath[1024] VALUE("");	/* Output directory/name */
 VAR int		OutputFiles	VALUE(0),	/* Generate multiple files? */
 		OutputColor	VALUE(1);	/* Output color images */
 VAR int		OutputJPEG	VALUE(0);	/* JPEG compress images? */
@@ -166,7 +168,7 @@ VAR int		Encryption	VALUE(0),	/* Encrypt the PDF file? */
 		Permissions	VALUE(-4);	/* File permissions? */
 VAR char	OwnerPassword[33] VALUE(""),	/* Owner password */
 		UserPassword[33] VALUE("");	/* User password */
-VAR int		EmbedFonts	VALUE(0);	/* Embed fonts? */
+VAR int		EmbedFonts	VALUE(1);	/* Embed fonts? */
 VAR int		PSLevel		VALUE(2),	/* Language level (0 for PDF) */
 		PSCommands	VALUE(0),	/* Output PostScript commands? */
 		XRXComments	VALUE(0);	/* Output Xerox comments? */
@@ -189,17 +191,25 @@ VAR style_t	HeadFootStyle	VALUE(STYLE_NORMAL);
 VAR float	HeadFootSize	VALUE(11.0f);	/* Size of header & footer */
 
 VAR char	*Header[3]	NULL3,		/* Header for regular pages */
+		*Header1[3]	NULL3,		/* Header for first pages */
 		*TocHeader[3]	NULL3,		/* Header for TOC pages */
 		*Footer[3]	NULL3,		/* Regular page footer */
 		*TocFooter[3]	NULL3,		/* Footer for TOC pages */
 		TocTitle[1024]	VALUE("Table of Contents");
 						/* TOC title string */
 
-VAR char	TitleImage[255]	VALUE(""),	/* Title page image */
-		LogoImage[255]	VALUE(""),	/* Logo image */
+VAR char	TitleImage[1024] VALUE(""),	/* Title page image */
+		LogoImage[1024]	VALUE(""),	/* Logo image */
 		BodyColor[255]	VALUE(""),	/* Body color */
-		BodyImage[255]	VALUE(""),	/* Body image */
+		BodyImage[1024]	VALUE(""),	/* Body image */
 		LinkColor[255]	VALUE("");	/* Link color */
+
+VAR char	HFImage[MAX_HF_IMAGES][1024]	/* Header/footer images */
+#  ifdef _HTMLDOC_CXX_
+= { "" }
+#  endif /* _HTMLDOC_CXX_ */
+;
+
 VAR int		LinkStyle	VALUE(1);	/* 1 = underline, 0 = plain */
 VAR int		Links		VALUE(1);	/* 1 = generate links, 0 = no links */
 VAR char	Path[2048]	VALUE(""),	/* Search path */
@@ -247,6 +257,8 @@ extern int	pspdf_export(tree_t *document, tree_t *toc);
 
 extern int	html_export(tree_t *document, tree_t *toc);
 
+extern int	htmlsep_export(tree_t *document, tree_t *toc);
+
 extern tree_t	*toc_build(tree_t *tree);
 
 extern void	get_color(const uchar *c, float *rgb, int defblack = 1);
@@ -257,6 +269,7 @@ extern void	set_page_size(const char *size);
 
 extern void	prefs_load(void);
 extern void	prefs_save(void);
+extern void	prefs_set_paths(void);
 
 extern char	*format_number(int n, char f);
 

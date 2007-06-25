@@ -1,5 +1,260 @@
-CHANGES.txt - 10/23/2002
+CHANGES.txt - 08/01/2006
 ------------------------
+
+CHANGES IN HTMLDOC v1.8.27
+
+    BUG FIXES
+
+	- Fixed a crash bug that appeared when more than 10 blank
+	  pages were present in a document (PR #6223)
+	- Color changes were not reflected in PRE text (STR #129)
+	- Remote URLs did not always work on older operating
+	  systems (PR #6179)
+	- Image filenames using % escapes were not decoded
+	  properly.
+	- Rows using BGCOLOR that spanned across multiple pages
+	  did not render properly (PR #6149)
+	- Rows no longer start on a new page due to a cell with
+	  both HEIGHT and ROWSPAN specified (PR #6086)
+	- CMYK JPEG images caused HTMLDOC to crash (PR #6106)
+	- Table cell width calculations didn't always account for
+	  the proper minimum width (STR #121)
+	- Images were not copied when generating indexed HTML
+	  output to a directory (STR #117)
+	- Changing the bottom margin resulted in text that was
+	  formatted below the bottom margin.
+	- The Monospace-Oblique font was not embedded properly in
+	  PDF files.
+
+
+CHANGES IN HTMLDOC v1.8.26
+
+    BUG FIXES
+
+	- Outline and keyword strings in PDF files are now stored
+	  as Unicode (STR #113)
+	- The Flate compression code could get in an infinite
+	  loop if it ran out of memory (STR #101)
+	- Book files saved from the GUI did not handle filenames
+	  with spaces (STR #105)
+	- Fixed and re-enabled the ASCII85Device filter support
+	  in PostScript Level 2/3 output (STR #116)
+	- Character entities in the first word of a file were not
+	  rendered properly (STR #111)
+	- Fixed-size table columns were incorrectly resized when
+	  a table width was also specified and there was extra
+	  space to distribute (PR #6062)
+	- Text could "walk" up or down when in-line images were
+	  used (PR #6034)
+	- Row backgrounds incorrectly replaced cell backgrounds
+	  when the first cell in a row used ROWSPAN (PR #6033, PR
+	  #6036)
+	- HTMLDOC did not correctly parse FONT FACE attributes
+	  (PR #6006)
+	- Images in Level 2/3 PostScript output did not work on
+	  some printers (PR #6000)
+	- The GUI did not use the first page header (PR #5978)
+
+
+CHANGES IN HTMLDOC v1.8.25
+
+    NEW FEATURES
+
+	- Added "--overflow" and "--no-overflow" command-line
+	  options to show or hide the content-too-large errors;
+	  the default is "--no-overflow".
+	- Added "--header1" command-line option and "HEADER1"
+	  page comments to set the page header for the first page
+	  of each chapter.
+	- Added "timing" and "remotebytes" debug data generation.
+	- Added DejaVu font collection to better support Cyrillic
+	  and Greek text; the new fonts are available under the
+	  generic names "monospace", "sans", and "serif".
+	- Added "--referer" command-line option and corresponding
+	  CGI-mode support to pass Referer: information in HTTP
+	  requests (STR #91)
+
+    CHANGES:
+
+	- On Windows, HTMLDOC now logs CGI mode errors to a file
+	  called "htmldoc.log" in the Windows temporary
+	  directory.
+	- HTMLDOC no longer uses Base-85 encoding for image data
+	  when producing Level 2 and 3 PostScript output. It
+	  appears that many printers and PostScript interpreters
+	  cannot properly decode this data when the original
+	  image data is not a multiple of 8 bits.
+	- HTMLDOC now renders STRONG elements in boldface instead
+	  of bold-italic to match the W3C recommendations.
+	- HTMLDOC now automatically inserts a TR element before a
+	  TD or TH element as needed to improve web site
+	  compatibility; this also triggers a HTML error in
+	  --strict mode.
+
+    BUG FIXES
+
+	- "$HFIMAGEn" didn't work in a header/footer string.
+	- HTMLDOC could crash when rendering a table.
+	- Book files were not used in CGI mode (STR #69)
+	- Cookies were not sent in HTTP requests (STR #71)
+	- Table cells were not aligned properly when the ROWSPAN
+	  attribute was set to 1 (STR #73)
+	- HTMLDOC crashed when rendering unresolved hyperlinks in
+	  aligned images (STR #62)
+	- Documented the HTMLDOC_NOCGI environment variable (STR
+	  #63)
+	- HTMLDOC sometimes crashed when rendering tables with
+	  background colors (STR #65)
+	- HTMLDOC would crash when writing encrypted strings
+	  longer than 1024 bytes (STR #66)
+	- HTMLDOC didn't set the data directory when running in
+	  CGI mode on Windows.
+	- HTMLDOC could crash when loading the Symbol.afm file
+	  (STR #93)
+	- HTMLDOC did not always honor HEIGHT attributes in table
+	  rows.
+	- Tables with a mix of colspan and rowspan sometimes
+	  caused cells to be moved vertically outside the cell.
+
+
+CHANGES IN HTMLDOC v1.8.24
+
+    NEW FEATURES
+
+	- HTMLDOC now provides limited cookie support via the
+	  "--cookies" command-line option and via the cookies
+	  passed by a browser in CGI mode.
+	- HTMLDOC now features a CGI mode which provides PDF
+	  conversion functionality for web servers.
+	- HTMLDOC now generates a document outline for each
+	  input file or URL in webpage mode; the outline shows
+	  the title for the file and links to the first page
+	  containing that file.
+	- HTMLDOC now offers an "htmlsep" output type which
+	  generates HTML output with a separate file for each
+	  heading in the table of contents.
+	- HTMLDOC now includes LINK elements in generated HTML
+	  so that intelligent browsers like Mozilla can show
+	  next/prev/contents/top buttons.
+	- HTMLDOC now supports the BORDERCOLOR attribute for
+	  tables, a MSIE extension.
+	- The "strict HTML" mode now reports unresolved local
+	  links.
+	- Added support for HP LaserJet 5000 and Xerox DocuPrint
+	  2000/100 printer commands.
+	- Added multiple header/footer image support.
+	- Links to external URLs are now resolved so that the
+	  output file can be moved without affecting them.
+
+    CHANGES
+
+	- The command-line now allows --fontsize values from 4
+	  to 26 to match the GUI.
+	- Now use a 0.001 point tolerance when checking for
+	  content that overflows the page/cell.
+	- HTMLDOC no longer enables interpolation of 2-color
+	  images.
+	- The default vertical alignment of images is "BOTTOM"
+	  to match the HTML specification.
+	- Paragraph spacing is only applied to the first table
+	  after a paragraph.
+	- The tabloid media size was 10 points too short in
+	  length.
+	- The table formatter now subtracts the outside border
+	  and padding widths for percentage-based widths.  This
+	  helps to eliminate "truncation or overlapping" errors.
+	- Dropped support for FLTK 1.0.x when building the GUI.
+	- The default vertical alignment is now "bottom" inside
+	  paragraphs to correctly align different sized text and
+	  images to the baseline.
+	- Indexed images are now written as PDF image objects
+	  when encryption is enabled; this works around a
+	  serious bug in Acrobat 6 which tries to decrypt the
+	  colormap of in-line images twice, causing some very
+	  strange colors!
+	- Table captions can now be bottom aligned.
+	- Blocks now break at the bottom of a page if the
+	  current line height + standard line height goes below
+	  the bottom of the page; this prevents images with
+	  captions from getting erroneously moved to the top of
+	  the next page.
+	- Character entities are now supported in HTML
+	  attributes and unknown or invalid character entities
+	  are left as plain text.
+	- Changed handling of NOWRAP for some tables.
+	- The --permissions option now supports multiple
+	  permission keywords in a single invocation.
+	- Dropped support for MacOS 9 and earlier.
+	- HTMLDOC now breaks between images that are too large
+	  to fit on a single line, to match the behavior of
+	  Mozilla/Netscape (STR #7).
+	- HTMLDOC now handles XHTML input more cleanly.
+	- HTMLDOC no longer specifies an interpolation
+	  preference for images in PostScript or PDF output (STR
+	  #8)
+	- The DT element no longer applies an italic style (PR
+	  #5178)
+	- HTMLDOC now ignores content inside a STYLE element
+	  (PR #5183)
+
+    BUG FIXES
+
+	- Switching between landscape and portrait orientations
+	  would cause margin creepage.
+	- Images did not default to align=bottom, and the
+	  align=bottom line spacing calculation was incorrect.
+	- Whitespace before a link was underlined.
+	- Fixed a table column sizing bug.
+	- HTMLDOC didn't read back the HTTP response properly in
+	  all situations.
+	- Fixed some more PNG transparency cases.
+	- The PageBoundingBox comments in PostScript output did
+	  not account for the back page when duplexing was
+	  enabled.
+	- HTMLDOC generated an incorrect image mask for some
+	  images.
+	- The first page of each chapter did not use the custom
+	  page number if it was placed inside the heading.
+	- HTMLDOC did not reset the rendering cache before each
+	  page when producing N-up output; this caused font
+	  errors in some cases that prevented the document from
+	  printing or displaying properly.
+	- Eliminated a common cause of "table too wide"
+	  formatting errors,
+	- Fixed a bug when applying a table background color to
+	  a cell without a border that cross a page boundary.
+	- Fixed some calls to strcpy with overlapping arguments.
+	- The names object was never set when the name objects
+	  were written.
+	- Character entities were not decoded/encoded inside
+	  HTML comments.
+	- The current heading was not always correctly
+	  substituted when used in the page header or footer.
+	- When converting web pages from the GUI, the
+	  table-of-contents page number preferences were
+	  incorrectly used.
+	- PDF page effects/transitions were not put in the right
+	  part of the page dictionary, causing them not to be
+	  used by the PDF reader application.
+	- The _HD_OMIT_TOC attribute was not being honored for
+	  HTML output.
+	- HTMLDOC now handles "open" messages from the MacOS X
+	  Finder (STR #3)
+	- The GUI did not load or save the "strict HTML" setting
+	  (STR #6)
+	- The HTML version of the title page did not set the ALT
+	  attribute for the title image (STR #10)
+	- The HTML version of the table of contents did not
+	  correctly nest the lists in the parent items (STR #10)
+	- Borders around left and right-aligned images were not
+	  drawn properly (PR #5112)
+	- Grayscale PDF output was not truly grayscale (STR #32)
+	- Fixed a table-of-contents bug introduced in 1.8.24rc1
+	  which caused the PDF document outline and actual TOC
+	  pages were not rendered properly (STR #37)
+	- Links were not rendered due to a bug that was
+	  introduced in 1.8.24rc2 (STR #41)
+
 
 CHANGES IN HTMLDOC v1.8.23
 

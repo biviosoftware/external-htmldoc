@@ -3,7 +3,7 @@
  *
  *   Utility functions for HTMLDOC, a HTML document processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -184,7 +184,7 @@ get_color(const uchar *color,	/* I - Color attribute */
     {
       // Update the color name to be #RRGGBB instead of RRGGBB...
       tempcolor[0] = '#';
-      strcpy((char *)tempcolor + 1, (char *)color);
+      strlcpy((char *)tempcolor + 1, (char *)color, sizeof(tempcolor) - 1);
       color = tempcolor;
     }
   }
@@ -359,6 +359,7 @@ get_fmt(char **formats)			// I - New format strings
   };
 
 
+  // Safe because fmt is 4 chars long
   strcpy(fmt, "...");
 
   for (i = 0; i < 3; i ++)
@@ -454,7 +455,7 @@ set_page_size(const char *size)	/* I - Page size string */
     */
 
     PageWidth  = 792;
-    PageLength = 1214;
+    PageLength = 1224;
   }
   else if (strcasecmp(size, "a4") == 0)
   {

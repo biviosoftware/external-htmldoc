@@ -15,9 +15,9 @@
 #       Attn: HTMLDOC Licensing Information
 #       Easy Software Products
 #       44141 Airport View Drive, Suite 204
-#       Hollywood, Maryland 20636-3111 USA
+#       Hollywood, Maryland 20636-3142 USA
 #
-#       Voice: (301) 373-9603
+#       Voice: (301) 373-9600
 #       EMail: info@easysw.com
 #         WWW: http://www.easysw.com
 #

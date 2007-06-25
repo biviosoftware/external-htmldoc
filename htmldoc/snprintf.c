@@ -1,9 +1,9 @@
 /*
  * "$Id$"
  *
- *   snprintf functions for HTMLDOC.
+ *   (v)snprintf functions for HTMLDOC.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -23,42 +23,41 @@
  *
  * Contents:
  *
- *   vsnprintf() - Format a string into a fixed size buffer.
- *   snprintf()  - Format a string into a fixed size buffer.
+ *   hd_vsnprintf() - Format a string into a fixed size buffer.
+ *   hd_snprintf()  - Format a string into a fixed size buffer.
  */
 
 /*
  * Include necessary headers...
  */
 
-#include <stdio.h>
-#include <ctype.h>
 #include "hdstring.h"
 
 
 #ifndef HAVE_VSNPRINTF
 /*
- * 'vsnprintf()' - Format a string into a fixed size buffer.
+ * 'hd_vsnprintf()' - Format a string into a fixed size buffer.
  */
 
-int				/* O - Number of bytes formatted */
-vsnprintf(char       *buffer,	/* O - Output buffer */
-          size_t     bufsize,	/* O - Size of output buffer */
-	  const char *format,	/* I - printf-style format string */
-	  va_list    ap)	/* I - Pointer to additional arguments */
+int					/* O - Number of bytes formatted */
+hd_vsnprintf(char       *buffer,	/* O - Output buffer */
+             size_t     bufsize,	/* O - Size of output buffer */
+ 	     const char *format,	/* I - printf-style format string */
+ 	     va_list    ap)		/* I - Pointer to additional arguments */
 {
-  char		*bufptr,	/* Pointer to position in buffer */
-		*bufend,	/* Pointer to end of buffer */
-		sign,		/* Sign of format width */
-		size,		/* Size character (h, l, L) */
-		type;		/* Format type character */
-  const char	*bufformat;	/* Start of format */
-  int		width,		/* Width of field */
-		prec;		/* Number of characters of precision */
-  char		tformat[100],	/* Temporary format string for sprintf() */
-		temp[1024];	/* Buffer for formatted numbers */
-  char		*s;		/* Pointer to string */
-  int		slen;		/* Length of string */
+  char		*bufptr,		/* Pointer to position in buffer */
+		*bufend,		/* Pointer to end of buffer */
+		sign,			/* Sign of format width */
+		size,			/* Size character (h, l, L) */
+		type;			/* Format type character */
+  const char	*bufformat;		/* Start of format */
+  int		width,			/* Width of field */
+		prec;			/* Number of characters of precision */
+  char		tformat[100],		/* Temporary format string for sprintf() */
+		temp[1024];		/* Buffer for formatted numbers */
+  char		*s;			/* Pointer to string */
+  int		slen;			/* Length of string */
+  int		bytes;			/* Total number of bytes needed */
 
 
  /*
@@ -67,8 +66,9 @@ vsnprintf(char       *buffer,	/* O - Output buffer */
 
   bufptr = buffer;
   bufend = buffer + bufsize - 1;
+  bytes  = 0;
 
-  while (*format && bufptr < bufend)
+  while (*format)
   {
     if (*format == '%')
     {
@@ -129,16 +129,21 @@ vsnprintf(char       *buffer,	/* O - Output buffer */
 
 	    sprintf(temp, tformat, va_arg(ap, double));
 
-	    if ((bufptr + strlen(temp)) > bufend)
+            bytes += strlen(temp);
+
+            if (bufptr)
 	    {
-	      strncpy(bufptr, temp, bufend - bufptr);
-	      bufptr = bufend;
-	      break;
-	    }
-	    else
-	    {
-	      strcpy(bufptr, temp);
-	      bufptr += strlen(temp);
+	      if ((bufptr + strlen(temp)) > bufend)
+	      {
+		strncpy(bufptr, temp, bufend - bufptr);
+		bufptr = bufend;
+		break;
+	      }
+	      else
+	      {
+		strcpy(bufptr, temp);
+		bufptr += strlen(temp);
+	      }
 	    }
 	    break;
 
@@ -159,16 +164,21 @@ vsnprintf(char       *buffer,	/* O - Output buffer */
 
 	    sprintf(temp, tformat, va_arg(ap, int));
 
-	    if ((bufptr + strlen(temp)) > bufend)
+            bytes += strlen(temp);
+
+	    if (bufptr)
 	    {
-	      strncpy(bufptr, temp, bufend - bufptr);
-	      bufptr = bufend;
-	      break;
-	    }
-	    else
-	    {
-	      strcpy(bufptr, temp);
-	      bufptr += strlen(temp);
+	      if ((bufptr + strlen(temp)) > bufend)
+	      {
+		strncpy(bufptr, temp, bufend - bufptr);
+		bufptr = bufend;
+		break;
+	      }
+	      else
+	      {
+		strcpy(bufptr, temp);
+		bufptr += strlen(temp);
+	      }
 	    }
 	    break;
 	    
@@ -182,29 +192,39 @@ vsnprintf(char       *buffer,	/* O - Output buffer */
 
 	    sprintf(temp, tformat, va_arg(ap, void *));
 
-	    if ((bufptr + strlen(temp)) > bufend)
+            bytes += strlen(temp);
+
+	    if (bufptr)
 	    {
-	      strncpy(bufptr, temp, bufend - bufptr);
-	      bufptr = bufend;
-	      break;
-	    }
-	    else
-	    {
-	      strcpy(bufptr, temp);
-	      bufptr += strlen(temp);
+	      if ((bufptr + strlen(temp)) > bufend)
+	      {
+		strncpy(bufptr, temp, bufend - bufptr);
+		bufptr = bufend;
+		break;
+	      }
+	      else
+	      {
+		strcpy(bufptr, temp);
+		bufptr += strlen(temp);
+	      }
 	    }
 	    break;
 
         case 'c' : /* Character or character array */
-	    if (width <= 1)
-	      *bufptr++ = va_arg(ap, int);
-	    else
-	    {
-	      if ((bufptr + width) > bufend)
-	        width = bufend - bufptr;
+	    bytes += width;
 
-	      memcpy(bufptr, va_arg(ap, char *), width);
-	      bufptr += width;
+	    if (bufptr)
+	    {
+	      if (width <= 1)
+		*bufptr++ = va_arg(ap, int);
+	      else
+	      {
+		if ((bufptr + width) > bufend)
+	          width = bufend - bufptr;
+
+		memcpy(bufptr, va_arg(ap, char *), width);
+		bufptr += width;
+	      }
 	    }
 	    break;
 
@@ -216,24 +236,29 @@ vsnprintf(char       *buffer,	/* O - Output buffer */
 	    if (slen > width && prec != width)
 	      width = slen;
 
-	    if ((bufptr + width) > bufend)
-	      width = bufend - bufptr;
+            bytes += width;
 
-            if (slen > width)
-	      slen = width;
-
-	    if (sign == '-')
+	    if (bufptr)
 	    {
-	      strncpy(bufptr, s, slen);
-	      memset(bufptr + slen, ' ', width - slen);
-	    }
-	    else
-	    {
-	      memset(bufptr, ' ', width - slen);
-	      strncpy(bufptr + width - slen, s, slen);
-	    }
+	      if ((bufptr + width) > bufend)
+		width = bufend - bufptr;
 
-	    bufptr += width;
+              if (slen > width)
+		slen = width;
+
+	      if (sign == '-')
+	      {
+		strncpy(bufptr, s, slen);
+		memset(bufptr + slen, ' ', width - slen);
+	      }
+	      else
+	      {
+		memset(bufptr, ' ', width - slen);
+		strncpy(bufptr + width - slen, s, slen);
+	      }
+
+	      bufptr += width;
+	    }
 	    break;
 
 	case 'n' : /* Output number of chars so far */
@@ -246,47 +271,58 @@ vsnprintf(char       *buffer,	/* O - Output buffer */
 
 	    sprintf(temp, tformat, va_arg(ap, int));
 
-	    if ((bufptr + strlen(temp)) > bufend)
+            bytes += strlen(temp);
+
+	    if (bufptr)
 	    {
-	      strncpy(bufptr, temp, bufend - bufptr);
-	      bufptr = bufend;
-	      break;
-	    }
-	    else
-	    {
-	      strcpy(bufptr, temp);
-	      bufptr += strlen(temp);
+	      if ((bufptr + strlen(temp)) > bufend)
+	      {
+		strncpy(bufptr, temp, bufend - bufptr);
+		bufptr = bufend;
+		break;
+	      }
+	      else
+	      {
+		strcpy(bufptr, temp);
+		bufptr += strlen(temp);
+	      }
 	    }
 	    break;
       }
     }
     else
-      *bufptr++ = *format++;
+    {
+      bytes ++;
+
+      if (bufptr && bufptr < bufend)
+	*bufptr++ = *format++;
+    }
   }
 
  /*
-  * Nul-terminate the string and return the number of characters in it.
+  * Nul-terminate the string and return the number of characters needed.
   */
 
   *bufptr = '\0';
-  return (bufptr - buffer);
+
+  return (bytes);
 }
 #endif /* !HAVE_VSNPRINT */
 
 
 #ifndef HAVE_SNPRINTF
 /*
- * 'snprintf()' - Format a string into a fixed size buffer.
+ * 'hd_snprintf()' - Format a string into a fixed size buffer.
  */
 
-int				/* O - Number of bytes formatted */
-snprintf(char       *buffer,	/* O - Output buffer */
-         size_t     bufsize,	/* O - Size of output buffer */
-         const char *format,	/* I - printf-style format string */
-	 ...)			/* I - Additional arguments as needed */
+int					/* O - Number of bytes formatted */
+hd_snprintf(char       *buffer,		/* O - Output buffer */
+            size_t     bufsize,		/* O - Size of output buffer */
+            const char *format,		/* I - printf-style format string */
+	    ...)			/* I - Additional arguments as needed */
 {
-  int		bytes;		/* Number of bytes formatted */
-  va_list 	ap;		/* Pointer to additional arguments */
+  int		bytes;			/* Number of bytes formatted */
+  va_list 	ap;			/* Pointer to additional arguments */
 
 
   va_start(ap, format);

@@ -3,7 +3,7 @@
  *
  *   HTML parsing definitions for HTMLDOC, a HTML document processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2006 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -45,10 +45,10 @@ extern "C" {
  * Define some compatibility macros for Microsoft Windows...
  */
 
-#  if defined(WIN32) || defined(__EMX__)
+#  ifdef WIN32
 #    define strcasecmp(s,t)	stricmp(s,t)
 #    define strncasecmp(s,t,n)	strnicmp(s,t,n)
-#  endif /* WIN32 || __EMX__ */
+#  endif /* WIN32 */
 
 
 /*
@@ -190,7 +190,12 @@ typedef enum
 	TYPE_COURIER = 0,
 	TYPE_TIMES,
 	TYPE_HELVETICA,
-	TYPE_SYMBOL
+	TYPE_MONOSPACE,
+	TYPE_SERIF,
+	TYPE_SANS_SERIF,
+	TYPE_SYMBOL,
+	TYPE_DINGBATS,
+	TYPE_MAX
 } typeface_t;
 
 /*
@@ -202,7 +207,8 @@ typedef enum
 	STYLE_NORMAL = 0,
 	STYLE_BOLD,
 	STYLE_ITALIC,
-	STYLE_BOLD_ITALIC
+	STYLE_BOLD_ITALIC,
+	STYLE_MAX
 } style_t;
 
 /*
@@ -248,7 +254,7 @@ typedef struct tree_str
   uchar			*data;		/* Text (MARKUP_NONE or MARKUP_COMMENT) */
   unsigned		halignment:2,	/* Horizontal alignment */
 			valignment:2,	/* Vertical alignment */
-			typeface:2,	/* Typeface code */
+			typeface:3,	/* Typeface code */
 			size:3,		/* Size of text */
 			style:2,	/* Style of text */
 			underline:1,	/* Text is underlined? */
@@ -281,10 +287,14 @@ extern float		_htmlSizes[],
 			_htmlSpacings[];
 extern typeface_t	_htmlBodyFont,
 			_htmlHeadingFont;
+extern int		_htmlInitialized;
 extern char		_htmlCharSet[];
-extern float		_htmlWidths[4][4][256];
+extern float		_htmlWidths[TYPE_MAX][STYLE_MAX][256];
+extern int		_htmlUnicode[];
 extern const char	*_htmlGlyphs[];
-extern const char	*_htmlFonts[4][4];
+extern const char	*_htmlGlyphsAll[];
+extern const char	*_htmlFonts[TYPE_MAX][STYLE_MAX];
+extern int		_htmlStandardFonts[TYPE_MAX];
 
 
 /*
@@ -299,6 +309,10 @@ extern int	htmlDeleteTree(tree_t *parent);
 extern tree_t	*htmlInsertTree(tree_t *parent, markup_t markup, uchar *data);
 extern tree_t	*htmlNewTree(tree_t *parent, markup_t markup, uchar *data);
 
+extern tree_t	*htmlFindFile(tree_t *doc, uchar *filename);
+extern tree_t	*htmlFindTarget(tree_t *doc, uchar *name);
+extern void	htmlFixLinks(tree_t *doc, tree_t *tree, uchar *base = 0);
+
 extern uchar	*htmlGetText(tree_t *tree);
 extern uchar	*htmlGetMeta(tree_t *tree, uchar *name);
 
@@ -310,6 +324,8 @@ extern uchar	*htmlGetStyle(tree_t *t, uchar *name);
 extern void	htmlSetBaseSize(float p, float s);
 extern void	htmlSetCharSet(const char *cs);
 extern void	htmlSetTextColor(uchar *color);
+
+extern void	htmlLoadFontWidths(void);
 
 extern void	htmlDebugStats(const char *title, tree_t *t);
 

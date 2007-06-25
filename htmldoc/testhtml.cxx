@@ -4,7 +4,7 @@
  *   Test program for HTML parsing routines for HTMLDOC, an HTML document
  *   processing program.
  *
- *   Copyright 1997-2002 by Michael Sweet.
+ *   Copyright 1997-2005 by Michael Sweet.
  *
  *   HTMLDOC is distributed under the terms of the Aladdin Free Public License
  *   which is described in the file "LICENSE.txt".
@@ -37,7 +37,8 @@ main(int  argc,			/* I - Number of command-line arguments */
   int		i;		/* Looping var */
   FILE		*fp;		/* Input file */
   tree_t	*t,		/* HTML markup tree */
-		*doc;		/* HTML document */
+		*doc,		/* HTML document */
+		*toc;		/* Table of contents */
   char		base[1024];	/* Base directory */
 
 
@@ -132,7 +133,7 @@ main(int  argc,			/* I - Number of command-line arguments */
   for (i = 1, doc = NULL; i < argc; i ++)
     if ((fp = fopen(file_find("", argv[i]), "r")) != NULL)
     {
-      strcpy(base, argv[i]);
+      strlcpy(base, argv[i], sizeof(base));
       if (strrchr(base, '/') != NULL)
         *strrchr(base, '/') = '\0';
       else
@@ -154,7 +155,12 @@ main(int  argc,			/* I - Number of command-line arguments */
       fprintf(stderr, "testhtml: Unable to open input file \'%s\'!\n", argv[i]);
 
   if (doc != NULL)
+  {
     htmlWriteFile(doc, stdout);
+    toc = toc_build(doc);
+    puts("---- TABLE OF CONTENTS ----");
+    htmlWriteFile(toc, stdout);
+  }
 
   return (doc == NULL);
 }

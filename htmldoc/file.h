@@ -3,7 +3,7 @@
  *
  *   Filename definitions for HTMLDOC, a HTML document processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -42,6 +42,7 @@ extern "C" {
 
 extern const char	*file_basename(const char *s);
 extern void		file_cleanup(void);
+extern void		file_cookies(const char *s);
 extern const char	*file_directory(const char *s);
 extern const char	*file_extension(const char *s);
 extern const char	*file_find(const char *path, const char *s);
@@ -50,6 +51,8 @@ extern const char	*file_localize(const char *filename, const char *newcwd);
 extern const char	*file_method(const char *s);
 extern void		file_nolocal();
 extern void		file_proxy(const char *url);
+extern void		file_referer(const char *referer);
+extern const char	*file_rlookup(const char *filename);
 extern const char	*file_target(const char *s);
 extern FILE		*file_temp(char *name, int len);
 

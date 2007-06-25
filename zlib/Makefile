@@ -18,9 +18,9 @@
 #       Attn: HTMLDOC Licensing Information
 #       Easy Software Products
 #       44141 Airport View Drive, Suite 204
-#       Hollywood, Maryland 20636-3111 USA
+#       Hollywood, Maryland 20636-3142 USA
 #
-#       Voice: (301) 373-9603
+#       Voice: (301) 373-9600
 #       EMail: info@easysw.com
 #         WWW: http://www.easysw.com
 #
@@ -32,8 +32,7 @@ include ../Makedefs
 #
 
 OBJS	=	adler32.o compress.o crc32.o gzio.o uncompr.o deflate.o \
-		trees.o zutil.o inflate.o infblock.o inftrees.o infcodes.o \
-		infutil.o inffast.o
+		trees.o zutil.o inflate.o inftrees.o inffast.o
 
 #
 # Make all targets...
@@ -60,18 +59,14 @@ libz.a:	$(OBJS)
 	$(RANLIB) $@
 
 $(OBJS):	zlib.h zconf.h ../Makedefs
-deflate.o:	deflate.h zutil.h
+crc32.o:	zutil.h crc32.h
 gzio.o:		zutil.h
-infblock.o:	infblock.h inftrees.h infcodes.h infutil.h zutil.h
-infcodes.o:	zutil.h
-infcodes.o:	inftrees.h infblock.h infcodes.h infutil.h inffast.h
-inffast.o:	zutil.h inftrees.h
-inffast.o:	infblock.h infcodes.h infutil.h inffast.h
-inflate.o:	zutil.h infblock.h
-inftrees.o:	zutil.h inftrees.h
-infutil.o:	zutil.h infblock.h inftrees.h infcodes.h infutil.h
+deflate.o:	deflate.h zutil.h
 trees.o:	deflate.h zutil.h trees.h
 zutil.o:	zutil.h
+inflate.o:	zutil.h inftrees.h inflate.h inffast.h inffixed.h
+inftrees.o:	zutil.h inftrees.h
+inffast.o:	zutil.h inftrees.h inflate.h inffast.h
 
 #
 # End of "$Id$".

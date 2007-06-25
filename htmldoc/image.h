@@ -4,7 +4,7 @@
  *   Image management definitions for HTMLDOC, a HTML document processing
  *   program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -16,7 +16,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -64,7 +64,8 @@ typedef struct			/**** Image structure ****/
  * Prototypes...
  */
 
-extern void	image_copy(const char *filename, const char *destpath);
+extern void	image_copy(const char *src, const char *realsrc,
+		           const char *destpath);
 extern image_t	*image_find(const char *filename, int load_data = 0);
 extern void	image_flush_cache(void);
 extern int	image_getlist(image_t ***ptrs);

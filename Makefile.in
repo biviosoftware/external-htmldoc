@@ -3,7 +3,7 @@
 #
 #   Makefile for HTMLDOC, an HTML document processing program.
 #
-#   Copyright 1997-2002 by Easy Software Products.
+#   Copyright 1997-2005 by Easy Software Products.
 #
 #   These coded instructions, statements, and computer programs are the
 #   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
 #       Attn: ESP Licensing Information
 #       Easy Software Products
 #       44141 Airport View Drive, Suite 204
-#       Hollywood, Maryland 20636-3111 USA
+#       Hollywood, Maryland 20636-3142 USA
 #
 #       Voice: (301) 373-9600
 #       EMail: info@easysw.com
@@ -30,10 +30,17 @@ include Makedefs
 
 
 #
+# Software packaging...
+#
+
+EPM	=	epm -v --output-dir dist
+
+
+#
 # Subdirectories...
 #
 
-DIRS	=	@GUI@ @JPEG@ @ZLIB@ @PNG@ htmldoc doc
+DIRS	=	@JPEG@ @ZLIB@ @PNG@ htmldoc doc
 INSTALLDIRS =	fonts data doc htmldoc
 
 
@@ -57,6 +64,12 @@ clean:
 		echo Cleaning in $$dir...;\
 		(cd $$dir; $(MAKE) -$(MAKEFLAGS) clean) || break;\
 	done
+	$(RM) *.bak
+	$(RM) *.bck
+	$(RM) core
+	$(RM) core.* 
+	$(RM) -r autom4te*.cache
+	$(RM) config.h config.log config.status
 
 
 #
@@ -130,56 +143,12 @@ htmldoc.list:	htmldoc.list.in configure
 #
 # Make a portable binary distribution using EPM.
 #
-# EPM = ESP Package Manager, available at "http://www.easysw.com/epm".
+# EPM = ESP Package Manager, available at "http://www.easysw.com/epm/".
 #
 
 epm:
-	epm -v -s setup.xpm htmldoc
-
-
-#
-# Make a RPM distribution using EPM.
-#
-
-rpm:
-	epm -v -f rpm htmldoc
-
-
-#
-# Make a Debian distribution using EPM.
-#
-
-deb:
-	epm -v -f deb htmldoc
-
-
-#
-# Make an IRIX distribution using EPM.
-#
-
-tardist:
-	epm -v -f tardist htmldoc
-
-#
-# Make a MacOS X distribution using EPM.
-#
-
-osx:
-	epm -v -f osx htmldoc
-
-#
-# Make a Solaris distribution using EPM.
-#
-
-pkg:
-	epm -v -f pkg htmldoc
-
-#
-# Make an HP-UX distribution using EPM.
-#
-
-depot:
-	epm -v -f depot htmldoc
+	$(RM) -r dist
+	$(EPM) htmldoc
 
 
 #

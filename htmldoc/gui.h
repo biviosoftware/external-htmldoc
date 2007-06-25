@@ -3,7 +3,7 @@
  *
  *   GUI definitions for HTMLDOC, an HTML document processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -38,31 +38,14 @@
 #include <FL/Fl_Slider.H>
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Value_Slider.H>
-#include <FL/Fl_Window.H>
+#include <FL/Fl_Double_Window.H>
 
-#if FL_MAJOR_VERSION == 1 && FL_MINOR_VERSION == 0
-#  include <gui/CheckButton.h>
-#  define RadioButton	CheckButton
-#  include <gui/FileChooser.h>
-#  include <gui/HelpDialog.h>
-#  include <gui/Progress.h>
-#  define _tooltip(w,s)
-#else
-#  include <FL/Fl_Check_Button.H>
-#  include <FL/Fl_Round_Button.H>
-#  include <FL/Fl_File_Chooser.H>
-#  include <FL/Fl_Help_Dialog.H>
-#  include <FL/Fl_Progress.H>
-#  include <FL/Fl_Tooltip.H>
-#  define CheckButton	Fl_Check_Button
-#  define RadioButton	Fl_Round_Button
-#  define FileChooser	Fl_File_Chooser
-#  define FileIcon	Fl_File_Icon
-#  define FileBrowser	Fl_File_Browser
-#  define HelpDialog	Fl_Help_Dialog
-#  define Progress	Fl_Progress
-#  define _tooltip(w,s)	(w)->tooltip((s))
-#endif // FL_MAJOR_VERSION == 1 && FL_MINOR_VERSION == 0
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Round_Button.H>
+#include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Help_Dialog.H>
+#include <FL/Fl_Progress.H>
+#include <FL/Fl_Tooltip.H>
 
 
 /*
@@ -73,159 +56,168 @@ class GUI
 {
   private:
 
-  Fl_Window	*window;
+  Fl_Double_Window	*window;
 
-  Fl_Group	*controls;
-  Fl_Tabs	*tabs;
+  Fl_Group		*controls;
+  Fl_Tabs		*tabs;
 
-  Fl_Group	*inputTab;
-  RadioButton	*typeBook,
-		*typeContinuous,
-		*typeWebPage;
-  FileBrowser	*inputFiles;
-  Fl_Button	*addFile,
-		*addURL,
-		*editFile,
-		*deleteFile,
-		*moveUpFile,
-		*moveDownFile;
-  Fl_Input	*logoImage;
-  Fl_Button	*logoBrowse;
-  Fl_Input	*titleImage;
-  Fl_Button	*titleBrowse;
+  Fl_Group		*inputTab;
+  Fl_Round_Button	*typeBook,
+			*typeContinuous,
+			*typeWebPage;
+  Fl_File_Browser	*inputFiles;
+  Fl_Button		*addFile,
+			*addURL,
+			*editFile,
+			*deleteFile,
+			*moveUpFile,
+			*moveDownFile;
+  Fl_Input		*logoImage;
+  Fl_Button		*logoBrowse;
+  Fl_Input		*titleImage;
+  Fl_Button		*titleBrowse;
 
-  Fl_Group	*outputTab;
-  RadioButton	*outputFile,
-		*outputDirectory;
-  Fl_Input	*outputPath;
-  Fl_Button	*outputBrowse;
-  RadioButton	*typeHTML,
-		*typePS,
-		*typePDF;
-  CheckButton	*grayscale,
-		*titlePage,
-		*jpegCompress;
-  Fl_Group	*compGroup;
-  Fl_Slider	*compression;
-  Fl_Group	*jpegGroup;
-  Fl_Value_Slider *jpegQuality;
+  Fl_Group		*outputTab;
+  Fl_Round_Button	*outputFile,
+			*outputDirectory;
+  Fl_Input		*outputPath;
+  Fl_Button		*outputBrowse;
+  Fl_Round_Button	*typeHTML,
+			*typeHTMLSep,
+			*typePS,
+			*typePDF;
+  Fl_Check_Button	*grayscale,
+			*titlePage,
+			*jpegCompress;
+  Fl_Group		*compGroup;
+  Fl_Slider		*compression;
+  Fl_Group		*jpegGroup;
+  Fl_Value_Slider	*jpegQuality;
 
-  Fl_Group	*pageTab;
-  Fl_Input	*pageSize;
-  Fl_Menu_Button *pageSizeMenu;
-  CheckButton	*pageDuplex,
-		*landscape;
-  Fl_Input	*pageTop,
-		*pageLeft,
-		*pageRight,
-		*pageBottom;
-  Fl_Choice	*pageHeaderLeft,
-      		*pageHeaderCenter,
-      		*pageHeaderRight,
-      		*pageFooterLeft,
-      		*pageFooterCenter,
-      		*pageFooterRight;
-  Fl_Choice	*numberUp;
+  Fl_Group		*pageTab;
+  Fl_Input		*pageSize;
+  Fl_Menu_Button	*pageSizeMenu;
+  Fl_Check_Button	*pageDuplex,
+			*landscape;
+  Fl_Input		*pageTop,
+			*pageLeft,
+			*pageRight,
+			*pageBottom;
+  Fl_Choice		*pageHeaderLeft,
+      			*pageHeaderCenter,
+      			*pageHeaderRight,
+      			*pageHeader1Left,
+      			*pageHeader1Center,
+      			*pageHeader1Right,
+      			*pageFooterLeft,
+      			*pageFooterCenter,
+      			*pageFooterRight;
+  Fl_Choice		*numberUp;
 
-  Fl_Group	*tocTab;
-  Fl_Choice	*tocLevels;
-  CheckButton	*numberedToc;
-  Fl_Group	*tocHeader;
-  Fl_Choice	*tocHeaderLeft,
-      		*tocHeaderCenter,
-      		*tocHeaderRight;
-  Fl_Group	*tocFooter;
-  Fl_Choice	*tocFooterLeft,
-      		*tocFooterCenter,
-      		*tocFooterRight;
-  Fl_Input	*tocTitle;
+  Fl_Group		*tocTab;
+  Fl_Choice		*tocLevels;
+  Fl_Check_Button	*numberedToc;
+  Fl_Group		*tocHeader;
+  Fl_Choice		*tocHeaderLeft,
+      			*tocHeaderCenter,
+      			*tocHeaderRight;
+  Fl_Group		*tocFooter;
+  Fl_Choice		*tocFooterLeft,
+      			*tocFooterCenter,
+      			*tocFooterRight;
+  Fl_Input		*tocTitle;
 
-  Fl_Group	*colorsTab;
-  Fl_Input	*bodyColor;
-  Fl_Button	*bodyLookup;
-  Fl_Input	*bodyImage;
-  Fl_Button	*bodyBrowse;
-  Fl_Input	*textColor;
-  Fl_Button	*textLookup;
-  Fl_Input	*linkColor;
-  Fl_Button	*linkLookup;
-  Fl_Choice	*linkStyle;
+  Fl_Group		*colorsTab;
+  Fl_Input		*bodyColor;
+  Fl_Button		*bodyLookup;
+  Fl_Input		*bodyImage;
+  Fl_Button		*bodyBrowse;
+  Fl_Input		*textColor;
+  Fl_Button		*textLookup;
+  Fl_Input		*linkColor;
+  Fl_Button		*linkLookup;
+  Fl_Choice		*linkStyle;
 
-  Fl_Group	*fontsTab;
-  Fl_Choice	*headingFont,
-		*bodyFont,
-		*headFootFont;
-  Fl_Counter	*fontBaseSize,
-		*fontSpacing,
-		*headFootSize;
-  Fl_Choice	*charset;
-  CheckButton	*embedFonts;
+  Fl_Group		*fontsTab;
+  Fl_Choice		*headingFont,
+			*bodyFont,
+			*headFootFont;
+  Fl_Counter		*fontBaseSize,
+			*fontSpacing,
+			*headFootSize;
+  Fl_Choice		*charset;
+  Fl_Check_Button	*embedFonts;
 
-  Fl_Group	*psTab;
-  Fl_Group	*psLevel;
-  RadioButton	*ps1,
-		*ps2,
-		*ps3;
-  CheckButton	*psCommands,
-		*xrxComments;
+  Fl_Group		*psTab;
+  Fl_Group		*psLevel;
+  Fl_Round_Button	*ps1,
+			*ps2,
+			*ps3;
+  Fl_Check_Button	*psCommands,
+			*xrxComments;
 
-  Fl_Group	*pdfTab;
-  Fl_Group	*pdfVersion;
-  RadioButton	*pdf11,
-		*pdf12,
-		*pdf13,
-		*pdf14;
-  Fl_Choice	*pageMode,
-		*pageLayout,
-		*firstPage,
-		*pageEffect;
-  Fl_Value_Slider *pageDuration,
-		*effectDuration;
-  CheckButton	*links;
+  Fl_Group		*pdfTab;
+  Fl_Group		*pdfVersion;
+  Fl_Round_Button	*pdf11,
+			*pdf12,
+			*pdf13,
+			*pdf14;
+  Fl_Choice		*pageMode,
+			*pageLayout,
+			*firstPage,
+			*pageEffect;
+  Fl_Value_Slider	*pageDuration,
+			*effectDuration;
+  Fl_Check_Button	*links;
 
-  Fl_Group	*securityTab;
-  Fl_Group	*encryption;
-  RadioButton	*encryptionYes,
-		*encryptionNo;
-  Fl_Group	*permissions;
-  CheckButton	*permPrint,
-		*permModify,
-		*permCopy,
-		*permAnnotate;
-  Fl_Secret_Input *ownerPassword,
-		*userPassword;
+  Fl_Group		*securityTab;
+  Fl_Group		*encryption;
+  Fl_Round_Button	*encryptionYes,
+			*encryptionNo;
+  Fl_Group		*permissions;
+  Fl_Check_Button	*permPrint,
+			*permModify,
+			*permCopy,
+			*permAnnotate;
+  Fl_Secret_Input	*ownerPassword,
+			*userPassword;
 
-  Fl_Group	*optionsTab;
-  Fl_Input	*htmlEditor;
-  Fl_Button	*htmlBrowse;
-  Fl_Value_Slider *browserWidth;
-  Fl_Input	*path;
-  Fl_Input	*proxy;
-  CheckButton	*tooltips;
-  CheckButton	*modern_skin;
-  CheckButton	*strict_html;
+  Fl_Group		*optionsTab;
+  Fl_Input		*htmlEditor;
+  Fl_Button		*htmlBrowse;
+  Fl_Value_Slider	*browserWidth;
+  Fl_Input		*path;
+  Fl_Input		*proxy;
+  Fl_Check_Button	*tooltips;
+  Fl_Check_Button	*modern_skin;
+  Fl_Check_Button	*strict_html;
+  Fl_Check_Button	*overflow_errors;
 
-  Fl_Button	*saveOptions;
+  Fl_Button		*showAbout,
+			*showLicense,
+  			*saveOptions;
 
-  Fl_Button	*bookHelp,
-		*bookNew,
-		*bookOpen,
-		*bookSave,
-		*bookSaveAs,
-		*bookGenerate,
-		*bookClose;
+  Fl_Button		*bookHelp,
+			*bookNew,
+			*bookOpen,
+			*bookSave,
+			*bookSaveAs,
+			*bookGenerate,
+			*bookClose;
 
-  Progress	*progressBar;
+  Fl_Progress		*progressBar;
 
-  char		book_filename[1024];
-  int		book_changed;
+  char			book_filename[1024];
+  int			book_changed;
 
-  FileChooser	*fc;
-  FileIcon	*icon;
-  HelpDialog	*help;
-  Fl_Window	*error_window;
-  Fl_Browser	*error_list;
-  Fl_Button	*error_ok;
+  char			title_string[1024];
+
+  Fl_File_Chooser	*fc;
+  Fl_File_Icon		*icon;
+  Fl_Help_Dialog	*help;
+  Fl_Window		*error_window;
+  Fl_Browser		*error_list;
+  Fl_Button		*error_ok;
 
   void		loadSettings();
   void		title(const char *filename = NULL, int changed = 0);
@@ -279,9 +271,16 @@ class GUI
 
   static void	errorCB(Fl_Widget *w, GUI *gui);
 
+#ifdef __APPLE__
+  static void	appleOpenCB(const char *f);
+#endif // __APPLE__
+
   public:
 
   static const char	*help_dir;
+  static void		showAboutCB(void);
+  static void		showLicenseCB(void);
+
 
   GUI(const char *filename = NULL);
   ~GUI(void);

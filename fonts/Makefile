@@ -15,7 +15,7 @@
 #       Attn: ESP Licensing Information
 #       Easy Software Products
 #       44141 Airport View Drive, Suite 204
-#       Hollywood, Maryland 20636-3111 USA
+#       Hollywood, Maryland 20636-3142 USA
 #
 #       Voice: (301) 373-9600
 #       EMail: info@easysw.com
@@ -38,10 +38,23 @@ FONTS	=	\
 		Courier-Bold \
 		Courier-BoldOblique \
 		Courier-Oblique \
+		Dingbats \
 		Helvetica \
 		Helvetica-Bold \
 		Helvetica-BoldOblique \
 		Helvetica-Oblique \
+		Monospace \
+		Monospace-Bold \
+		Monospace-BoldOblique \
+		Monospace-Oblique \
+		Sans \
+		Sans-Bold \
+		Sans-BoldOblique \
+		Sans-Oblique \
+		Serif-Roman \
+		Serif-Bold \
+		Serif-BoldOblique \
+		Serif-Oblique \
 		Symbol \
 		Times-Bold \
 		Times-BoldItalic \

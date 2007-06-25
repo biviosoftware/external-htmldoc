@@ -3,7 +3,7 @@
  *
  *   Filename routines for HTMLDOC, a HTML document processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2006 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -26,6 +26,7 @@
  *   file_basename()    - Return the base filename without directory or target.
  *   file_cleanup()     - Close an open HTTP connection and remove
  *                        temporary files...
+ *   file_cookies()     - Set the HTTP cookies for remote accesses.
  *   file_directory()   - Return the directory without filename or target.
  *   file_extension()   - Return the extension of a file without the target.
  *   file_find_check()  - Check to see if the specified file or URL exists...
@@ -36,6 +37,9 @@
  *   file_method()      - Return the method for a filename or URL.
  *   file_nolocal()     - Disable access to local files.
  *   file_proxy()       - Set the proxy host for all HTTP requests.
+ *   file_referer()     - Set the HTTP referer for remote accesses.
+ *   file_rlookup()     - Lookup a filename to find the original URL, if
+ *                        applicable.
  *   file_target()      - Return the target of a link.
  *   file_temp()        - Create and open a temporary file.
  */
@@ -69,11 +73,11 @@
 
 #ifdef WIN32
 #  define getpid	GetCurrentProcessId
-#  define TEMPLATE	"%s%08x.%06d.tmp"
+#  define TEMPLATE	"%s/%08lx.%06d.tmp"
 #  define OPENMODE	(_O_CREAT | _O_RDWR | _O_TRUNC | _O_BINARY)
 #  define OPENPERM	(_S_IREAD | _S_IWRITE)
 #else
-#  define TEMPLATE	"%s/%06d.%06d.tmp"
+#  define TEMPLATE	"%s/%06ld.%06d.tmp"
 #  define OPENMODE	(O_CREAT | O_RDWR | O_EXCL | O_TRUNC)
 #  define OPENPERM	0600
 #endif /* WIN32 */
@@ -101,6 +105,9 @@ int	web_files = 0,			/* Number of temporary files */
 	web_alloc = 0;			/* Number of allocated files */
 cache_t	*web_cache = NULL;		/* Cache array */
 int	no_local = 0;			/* Non-zero to disable local files */
+char	cookies[1024] = "";		/* HTTP cookies, if any */
+char	referer_url[HTTP_MAX_VALUE] = "";
+					/* HTTP referer, if any */
 
 
 /*
@@ -121,10 +128,6 @@ file_basename(const char *s)	/* I - Filename or URL */
     basename ++;
   else if ((basename = strrchr(s, '\\')) != NULL)
     basename ++;
-#ifdef MAC
-  else if ((basename = strrchr(s, ':')) != NULL)
-    basename ++;
-#endif /* MAC */
   else
     basename = (char *)s;
 
@@ -134,8 +137,7 @@ file_basename(const char *s)	/* I - Filename or URL */
   if (strchr(basename, '#') == NULL)
     return (basename);
 
-  strncpy(buf, basename, sizeof(buf) - 1);
-  buf[sizeof(buf) - 1] = '\0';
+  strlcpy(buf, basename, sizeof(buf));
   *(char *)strchr(buf, '#') = '\0';
 
   return (buf);
@@ -151,10 +153,11 @@ file_cleanup(void)
 {
   int		i;			/* Looping var */
   char		filename[1024];		/* Temporary file */
-#ifdef WIN32
-  char		tmpdir[1024];		/* Temporary directory */
-#else
+  struct stat	fileinfo;		/* File information */
+  size_t	remotebytes;		/* Size of remote data */
   const char	*tmpdir;		/* Temporary directory */
+#ifdef WIN32
+  char		tmppath[1024];		/* Temporary directory */
 #endif /* WIN32 */
   const char	*debug;			/* HTMLDOC_DEBUG env var */
 
@@ -166,18 +169,43 @@ file_cleanup(void)
   }
 
 #ifdef WIN32
-  GetTempPath(sizeof(tmpdir), tmpdir);
+  if ((tmpdir = getenv("TEMP")) == NULL)
+  {
+    GetTempPath(sizeof(tmppath), tmppath);
+    tmpdir = tmppath;
+  }
 #else
   if ((tmpdir = getenv("TMPDIR")) == NULL)
     tmpdir = "/var/tmp";
 #endif /* WIN32 */
 
  /*
+  * Report on the remote data bytes that were downloaded...
+  */
+
+  debug = getenv("HTMLDOC_DEBUG");
+
+  if (debug &&
+      (strstr(debug, "all") != NULL || strstr(debug, "remotebytes") != NULL))
+  {
+    for (i = 0, remotebytes = 0; i < web_files; i ++)
+      if (web_cache[i].url)
+      {
+	snprintf(filename, sizeof(filename), TEMPLATE, tmpdir,
+        	 (long)getpid(), i + 1);
+        if (!stat(filename, &fileinfo))
+	  remotebytes += fileinfo.st_size;
+      }
+
+    progress_error(HD_ERROR_NONE, "REMOTEBYTES: %ld", (long)remotebytes);
+  }
+
+ /*
   * Check to see if we want to leave the temporary files around for
   * debugging...
   */
 
-  if ((debug = getenv("HTMLDOC_DEBUG")) != NULL &&
+  if (debug &&
       (strstr(debug, "all") != NULL || strstr(debug, "tempfiles") != NULL))
   {
    /*
@@ -192,7 +220,7 @@ file_cleanup(void)
     for (i = 0; i < web_files; i ++)
     {
       snprintf(filename, sizeof(filename), TEMPLATE, tmpdir,
-               getpid(), i + 1);
+               (long)getpid(), i + 1);
       progress_error(HD_ERROR_NONE, "DEBUG: %-31.31s %s\n",
                      web_cache[i].url ? web_cache[i].url : "none", filename);
     }
@@ -205,7 +233,7 @@ file_cleanup(void)
   while (web_files > 0)
   {
     snprintf(filename, sizeof(filename), TEMPLATE, tmpdir,
-             getpid(), web_files);
+             (long)getpid(), web_files);
 
     if (unlink(filename))
       progress_error(HD_ERROR_DELETE_ERROR,
@@ -231,6 +259,20 @@ file_cleanup(void)
 
 
 /*
+ * 'file_cookies()' - Set the HTTP cookies for remote accesses.
+ */
+
+void
+file_cookies(const char *s)		/* I - Cookie string or NULL */
+{
+  if (s)
+    strlcpy(cookies, s, sizeof(cookies));
+  else
+    cookies[0] = '\0';
+}
+
+
+/*
  * 'file_directory()' - Return the directory without filename or target.
  */
 
@@ -250,23 +292,21 @@ file_directory(const char *s)	/* I - Filename or URL */
     * Handle URLs...
     */
 
-    char	method[HTTP_MAX_URI],
+    char	scheme[HTTP_MAX_URI],
 		username[HTTP_MAX_URI],
 		hostname[HTTP_MAX_URI],
 		resource[HTTP_MAX_URI];
     int		port;
 
 
-    httpSeparate(s, method, username, hostname, &port, resource);
+    httpSeparateURI(HTTP_URI_CODING_ALL, s, scheme, sizeof(scheme),
+                    username, sizeof(username), hostname, sizeof(hostname),
+		    &port, resource, sizeof(resource));
     if ((dir = strrchr(resource, '/')) != NULL)
       *dir = '\0';
 
-    if (username[0])
-      snprintf(buf, sizeof(buf), "%s://%s@%s:%d%s", method, username, hostname,
-               port, resource);
-    else
-      snprintf(buf, sizeof(buf), "%s://%s:%d%s", method, hostname, port,
-               resource);
+    httpAssembleURI(HTTP_URI_CODING_ALL, buf, sizeof(buf), scheme, username,
+                    hostname, port, resource);
   }
   else
   {
@@ -274,24 +314,20 @@ file_directory(const char *s)	/* I - Filename or URL */
     * Normal stuff...
     */
 
-    strncpy(buf, s, sizeof(buf) - 1);
-    buf[sizeof(buf) - 1] = '\0';
+    strlcpy(buf, s, sizeof(buf));
 
     if ((dir = strrchr(buf, '/')) != NULL)
       *dir = '\0';
     else if ((dir = strrchr(buf, '\\')) != NULL)
       *dir = '\0';
-#ifdef MAC
-    else if ((dir = strrchr(buf, ':')) != NULL)
-      *dir = '\0';
-#endif /* MAC */
     else
       return (".");
 
     if (strncmp(buf, "file:", 5) == 0)
-      strcpy(buf, buf + 5);
+      hd_strcpy(buf, buf + 5);
 
     if (!buf[0])
+      /* Safe because buf is more than 2 chars long */
       strcpy(buf, "/");
   }
 
@@ -317,10 +353,6 @@ file_extension(const char *s)	/* I - Filename or URL */
     extension ++;
   else if ((extension = strrchr(s, '\\')) != NULL)
     extension ++;
-#ifdef MAC
-  else if ((extension = strrchr(s, ':')) != NULL)
-    extension ++;
-#endif /* MAC */
   else
     extension = s;
 
@@ -332,8 +364,7 @@ file_extension(const char *s)	/* I - Filename or URL */
   if (strchr(extension, '#') == NULL)
     return (extension);
 
-  strncpy(buf, extension, sizeof(buf) - 1);
-  buf[sizeof(buf) - 1] = '\0';
+  strlcpy(buf, extension, sizeof(buf));
 
   *(char *)strchr(buf, '#') = '\0';
 
@@ -350,7 +381,7 @@ file_find_check(const char *filename)	/* I - File or URL */
 {
   int		i;			/* Looping var */
   int		retry;			/* Current retry */
-  char		method[HTTP_MAX_URI],	/* Method/scheme */
+  char		scheme[HTTP_MAX_URI],	/* Method/scheme */
 		username[HTTP_MAX_URI],	/* Username:password */
 		hostname[HTTP_MAX_URI],	/* Hostname */
 		resource[HTTP_MAX_URI];	/* Resource */
@@ -361,24 +392,24 @@ file_find_check(const char *filename)	/* I - File or URL */
 		connauth[HTTP_MAX_VALUE];/* Auth string */
   http_status_t	status;			/* Status of request... */
   FILE		*fp;			/* Web file */
-  int		bytes,			/* Bytes read */
-		count,			/* Number of bytes so far */
-		total;			/* Total bytes in file */
+  ssize_t	bytes,			/* Bytes read */
+		count;			/* Number of bytes so far */
+  off_t		total;			/* Total bytes in file */
   char		tempname[HTTP_MAX_URI];	/* Temporary filename */
 
 
   DEBUG_printf(("file_find_check(filename=\"%s\")\n", filename));
 
   if (strncmp(filename, "http:", 5) == 0 || strncmp(filename, "//", 2) == 0)
-    strcpy(method, "http");
-#ifdef HAVE_LIBSSL
+    strcpy(scheme, "http");
+#ifdef HAVE_SSL
   else if (strncmp(filename, "https:", 6) == 0)
-    strcpy(method, "https");
-#endif /* HAVE_LIBSSL */
+    strcpy(scheme, "https");
+#endif /* HAVE_SSL */
   else
-    strcpy(method, "file");
+    strcpy(scheme, "file");
 
-  if (strcmp(method, "file") == 0)
+  if (strcmp(scheme, "file") == 0)
   {
    /*
     * Return immediately if we aren't allowing access to local files...
@@ -412,7 +443,9 @@ file_find_check(const char *filename)	/* I - File or URL */
         return (web_cache[i].name);
       }
 
-    httpSeparate(filename, method, username, hostname, &port, resource);
+    httpSeparateURI(HTTP_URI_CODING_ALL, filename, scheme, sizeof(scheme),
+                    username, sizeof(username), hostname, sizeof(hostname),
+		    &port, resource, sizeof(resource));
 
     for (status = HTTP_ERROR, retry = 0;
          status == HTTP_ERROR && retry < 5;
@@ -426,7 +459,7 @@ file_find_check(const char *filename)	/* I - File or URL */
 
         connhost = proxy_host;
         connport = proxy_port;
-        snprintf(connpath, sizeof(connpath), "%s://%s:%d%s", method,
+        snprintf(connpath, sizeof(connpath), "%s://%s:%d%s", scheme,
                  hostname, port, resource);
       }
       else
@@ -437,8 +470,7 @@ file_find_check(const char *filename)	/* I - File or URL */
 
         connhost = hostname;
         connport = port;
-        strncpy(connpath, resource, sizeof(connpath) - 1);
-	connpath[sizeof(connpath) - 1] = '\0';
+        strlcpy(connpath, resource, sizeof(connpath));
       }
 
       if (http != NULL && strcasecmp(http->hostname, hostname) != 0)
@@ -450,16 +482,15 @@ file_find_check(const char *filename)	/* I - File or URL */
       if (http == NULL)
       {
         progress_show("Connecting to %s...", connhost);
-        atexit(file_cleanup);
 
-#ifdef HAVE_LIBSSL
-        if (strcmp(method, "http") == 0)
+#ifdef HAVE_SSL
+        if (strcmp(scheme, "http") == 0)
           http = httpConnect(connhost, connport);
 	else
           http = httpConnectEncrypt(connhost, connport, HTTP_ENCRYPT_ALWAYS);
 #else
         http = httpConnect(connhost, connport);
-#endif /* HAVE_LIBSSL */
+#endif /* HAVE_SSL */
 
         if (http == NULL)
 	{
@@ -474,15 +505,19 @@ file_find_check(const char *filename)	/* I - File or URL */
 
       httpClearFields(http);
       httpSetField(http, HTTP_FIELD_HOST, hostname);
-      httpSetField(http, HTTP_FIELD_USER_AGENT, "HTMLDOC v" SVERSION);
       httpSetField(http, HTTP_FIELD_CONNECTION, "Keep-Alive");
+      httpSetField(http, HTTP_FIELD_REFERER, referer_url);
 
       if (username[0])
       {
         strcpy(connauth, "Basic ");
-        httpEncode64(connauth + 6, username);
+        httpEncode64_2(connauth + 6, sizeof(connauth) - 6, username,
+	               strlen(username));
         httpSetField(http, HTTP_FIELD_AUTHORIZATION, connauth);
       }
+
+      if (cookies[0])
+        httpSetCookie(http, cookies);
 
       if (!httpGet(http, connpath))
       {
@@ -503,8 +538,12 @@ file_find_check(const char *filename)	/* I - File or URL */
         * Grab new location from HTTP data...
 	*/
 
-        httpSeparate(httpGetField(http, HTTP_FIELD_LOCATION), method, username,
-	             hostname, &port, resource);
+	httpSeparateURI(HTTP_URI_CODING_ALL,
+	                httpGetField(http, HTTP_FIELD_LOCATION),
+			scheme, sizeof(scheme), username, sizeof(username),
+			hostname, sizeof(hostname), &port,
+			resource, sizeof(resource));
+
         status = HTTP_ERROR;
       }
     }
@@ -512,7 +551,7 @@ file_find_check(const char *filename)	/* I - File or URL */
     if (status != HTTP_OK)
     {
       progress_hide();
-      progress_error((HDerror)status, "%s", httpStatus(status));
+      progress_error((HDerror)status, "%s (%s)", httpStatus(status), filename);
       httpFlush(http);
       return (NULL);
     }
@@ -527,11 +566,11 @@ file_find_check(const char *filename)	/* I - File or URL */
       return (NULL);
     }
 
-    if ((total = atoi(httpGetField(http, HTTP_FIELD_CONTENT_LENGTH))) == 0)
+    if ((total = httpGetLength2(http)) == 0)
       total = 8192;
 
     count = 0;
-    while ((bytes = httpRead(http, resource, sizeof(resource))) > 0)
+    while ((bytes = httpRead2(http, resource, sizeof(resource))) > 0)
     {
       count += bytes;
       progress_update((100 * count / total) % 101);
@@ -599,10 +638,7 @@ file_find(const char *path,		/* I - Path "dir;dir;dir" */
   */
 
   if (strchr(s, '%') == NULL)
-  {
-    strncpy(basename, s, sizeof(basename) - 1);
-    basename[sizeof(basename) - 1] = '\0';
-  }
+    strlcpy(basename, s, sizeof(basename));
   else
   {
     for (sptr = s, temp = basename;
@@ -681,7 +717,7 @@ file_find(const char *path,		/* I - Path "dir;dir;dir" */
           basename[0] != '/')
 	*temp++ = '/';
 
-      strncpy(temp, basename, sizeof(filename) - (temp - filename) - 1);
+      strlcpy(temp, basename, sizeof(filename) - (temp - filename));
 
      /*
       * See if the file or URL exists...
@@ -833,10 +869,7 @@ file_localize(const char *filename,	/* I - Filename */
     sprintf(temp, "%s/%s", cwd, newslash);
   }
   else
-  {
-    strncpy(temp, filename, sizeof(temp) - 1);
-    temp[sizeof(temp) - 1] = '\0';
-  }
+    strlcpy(temp, filename, sizeof(temp));
 
   for (slash = temp, newslash = newcwd;
        *slash != '\0' && *newslash != '\0';
@@ -867,11 +900,11 @@ file_localize(const char *filename,	/* I - Filename */
   while (*newslash != '\0')
   {
     if (*newslash == '/' || *newslash == '\\')
-      strcat(newfilename, "../");
+      strlcat(newfilename, "../", sizeof(newfilename));
     newslash ++;
   }
 
-  strcat(newfilename, slash);
+  strlcat(newfilename, slash, sizeof(newfilename));
 
   return (newfilename);
 }
@@ -917,7 +950,7 @@ file_nolocal()
 void
 file_proxy(const char *url)	/* I - URL of proxy server */
 {
-   char	method[HTTP_MAX_URI],	/* Method name (must be HTTP) */
+   char	scheme[HTTP_MAX_URI],	/* Method name (must be HTTP) */
 	username[HTTP_MAX_URI],	/* Username:password information */
 	hostname[HTTP_MAX_URI],	/* Hostname */
 	resource[HTTP_MAX_URI];	/* Resource name */
@@ -931,15 +964,49 @@ file_proxy(const char *url)	/* I - URL of proxy server */
   }
   else
   {
-    httpSeparate(url, method, username, hostname, &port, resource);
+    httpSeparateURI(HTTP_URI_CODING_ALL, url, scheme, sizeof(scheme),
+                    username, sizeof(username), hostname, sizeof(hostname),
+		    &port, resource, sizeof(resource));
 
-    if (strcmp(method, "http") == 0)
+    if (strcmp(scheme, "http") == 0)
     {
-      strncpy(proxy_host, hostname, sizeof(proxy_host) - 1);
-      proxy_host[sizeof(proxy_host) - 1] = '\0';
+      strlcpy(proxy_host, hostname, sizeof(proxy_host));
       proxy_port = port;
     }
   }
+}
+
+
+/*
+ * 'file_referer()' - Set the HTTP referer for remote accesses.
+ */
+
+void
+file_referer(const char *referer)	/* I - Referer URL */
+{
+  if (referer)
+    strlcpy(referer_url, referer, sizeof(referer_url));
+  else
+    referer_url[0] = '\0';
+}
+
+
+/*
+ * 'file_rlookup()' - Lookup a filename to find the original URL, if applicable.
+ */
+
+const char *				/* O - URL or filename */
+file_rlookup(const char *filename)	/* I - Filename */
+{
+  int		i;			/* Looping var */
+  cache_t	*wc;			/* Current cache file */
+
+
+  for (i = web_files, wc = web_cache; i > 0; i --, wc ++)
+    if (!strcmp(wc->name, filename))
+      return (wc->url);
+
+  return (filename);
 }
 
 
@@ -961,10 +1028,6 @@ file_target(const char *s)	/* I - Filename or URL */
     basename ++;
   else if ((basename = strrchr(s, '\\')) != NULL)
     basename ++;
-#ifdef MAC
-  else if ((basename = strrchr(s, ':')) != NULL)
-    basename ++;
-#endif /* MAC */
   else
     basename = s;
 
@@ -986,10 +1049,9 @@ file_temp(char *name,			/* O - Filename */
   cache_t	*temp;			/* Pointer to cache entry */
   FILE		*fp;			/* File pointer */
   int		fd;			/* File descriptor */
-#ifdef WIN32
-  char		tmpdir[1024];		/* Buffer for temp dir */
-#else
   const char	*tmpdir;		/* Temporary directory */
+#ifdef WIN32
+  char		tmppath[1024];		/* Buffer for temp dir */
 #endif /* WIN32 */
 
 
@@ -1028,13 +1090,17 @@ file_temp(char *name,			/* O - Filename */
   web_files ++;
 
 #ifdef WIN32
-  GetTempPath(sizeof(tmpdir), tmpdir);
+  if ((tmpdir = getenv("TEMP")) == NULL)
+  {
+    GetTempPath(sizeof(tmppath), tmppath);
+    tmpdir = tmppath;
+  }
 #else
   if ((tmpdir = getenv("TMPDIR")) == NULL)
     tmpdir = "/var/tmp";
 #endif /* WIN32 */
 
-  snprintf(name, len, TEMPLATE, tmpdir, getpid(), web_files);
+  snprintf(name, (size_t)len, TEMPLATE, tmpdir, (long)getpid(), web_files);
 
   if ((fd = open(name, OPENMODE, OPENPERM)) >= 0)
     fp = fdopen(fd, "w+b");

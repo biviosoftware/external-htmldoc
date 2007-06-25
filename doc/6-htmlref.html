@@ -7,13 +7,13 @@
 <H1 ALIGN="RIGHT"><A NAME="HTMLREF">Chapter 6 - HTML Reference</A></H1>
 
 This chapter defines all of the HTML elements and attributes that are
-recognized and supported by <I>HTMLDOC</I>.
+recognized and supported by HTMLDOC.
 
 <H2>General Usage</H2>
 
 <P>There are two types of HTML files - structured documents using
-headings (H1, H2, etc.) which <I>HTMLDOC</I> calls "books", and
-unstructured documents that do not use headings which <I>HTMLDOC</I>
+headings (H1, H2, etc.) which HTMLDOC calls "books", and
+unstructured documents that do not use headings which HTMLDOC
 calls "web pages".
 
 <P>A very common mistake is to try converting a web page using:
@@ -26,13 +26,20 @@ htmldoc -f filename.pdf filename.html
 page files you <B>must</B> use the <CODE>--webpage</CODE> option at the
 command-line or choose <VAR>Web Page</VAR> in the input tab of the GUI.
 
-<P><B><I>HTMLDOC</I> does not support HTML 4.0 elements, attributes,
-stylesheets, or scripting.</B>
+<center><table width='80%' border='1' cellpadding='5' bgcolor='#cccccc'>
+<tr>
+	<td><B>Note:</B>
+
+	<P>HTMLDOC does not support HTML 4.0 elements, attributes,
+	stylesheets, or scripting.</P>
+	</td>
+</tr>
+</table></center>
 
 <!-- NEED 5in -->
 <H2>Elements</H2>
 
-<P>The following HTML elements are recognized by <I>HTMLDOC</I>:</P>
+<P>The following HTML elements are recognized by HTMLDOC:</P>
 
 <CENTER>
 <TABLE BORDER="1" CELLPADDING="5">
@@ -50,7 +57,7 @@ stylesheets, or scripting.</B>
 <TR><TD>BLOCKQUOTE</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
 <TR><TD>BODY</TD><TD ALIGN="CENTER">1.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
 <TR><TD>BR</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
-<TR><TD>CAPTION</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD><A HREF="#TABLE">See Below</A></TD></TR>
+<TR><TD>CAPTION</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
 <TR><TD>CENTER</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
 <TR><TD>CITE</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>Italic/Oblique</TD></TR>
 <TR><TD>CODE</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>Courier</TD></TR>
@@ -64,9 +71,9 @@ stylesheets, or scripting.</B>
 <TR><TD>EM</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>Italic/Oblique</TD></TR>
 <TR><TD>EMBED</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>HTML Only</TD></TR>
 <TR><TD>FONT</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD><A HREF="#FONT">See Below</A></TD></TR>
-<TR><TH>Element</TH><TH>Version</TH><TH>Supported?</TH><TH>Notes</TH></TR>
 <TR><TD>FORM</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">No</TD><TD>&nbsp;</TD></TR>
 <TR><TD>FRAME</TD><TD ALIGN="CENTER">3.2</TD><TD ALIGN="CENTER">No</TD><TD>&nbsp;</TD></TR>
+<TR><TH>Element</TH><TH>Version</TH><TH>Supported?</TH><TH>Notes</TH></TR>
 <TR><TD>FRAMESET</TD><TD ALIGN="CENTER">3.2</TD><TD ALIGN="CENTER">No</TD><TD>&nbsp;</TD></TR>
 <TR><TD>H1</TD><TD ALIGN="CENTER">1.0</TD><TD ALIGN="CENTER">Yes</TD><TD>Boldface, <A HREF="#HEADING">See Below</A></TD></TR>
 <TR><TD>H2</TD><TD ALIGN="CENTER">1.0</TD><TD ALIGN="CENTER">Yes</TD><TD>Boldface, <A HREF="#HEADING">See Below</A></TD></TR>
@@ -95,10 +102,10 @@ stylesheets, or scripting.</B>
 <TR><TD>OPTION</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">No</TD><TD>&nbsp;</TD></TR>
 <TR><TD>P</TD><TD ALIGN="CENTER">1.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
 <TR><TD>PRE</TD><TD ALIGN="CENTER">1.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
-<TR><TH>Element</TH><TH>Version</TH><TH>Supported?</TH><TH>Notes</TH></TR>
 <TR><TD>S</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>Strikethrough</TD></TR>
 <TR><TD>SAMP</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>Courier</TD></TR>
 <TR><TD>SCRIPT</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">No</TD><TD>&nbsp;</TD></TR>
+<TR><TH>Element</TH><TH>Version</TH><TH>Supported?</TH><TH>Notes</TH></TR>
 <TR><TD>SELECT</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">No</TD><TD>&nbsp;</TD></TR>
 <TR><TD>SMALL</TD><TD ALIGN="CENTER">2.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
 <TR><TD>SPACER</TD><TD ALIGN="CENTER">N3.0</TD><TD ALIGN="CENTER">Yes</TD><TD>&nbsp;</TD></TR>
@@ -122,7 +129,7 @@ stylesheets, or scripting.</B>
 
 <H2><A NAME="COMMENTS">Comments</A></H2>
 
-<P><I>HTMLDOC</I> supports many special HTML comments to
+<P>HTMLDOC supports many special HTML comments to
 initiate page breaks, set the header and footer text, and
 control the current media options:</P>
 
@@ -262,6 +269,7 @@ control the current media options:</P>
 
 </DL>
 
+<!-- NEED 2in -->
 <H3>Header/Footer Strings</H3>
 
 <P>The <CODE>HEADER</CODE> and <CODE>FOOTER</CODE> comments
@@ -277,7 +285,7 @@ dollar sign (<CODE>$</CODE>):</P>
 	<DD>Inserts a single dollar sign in the header.
 
 	<!-- NEED 1in -->
-	<DT><CODE>CHAPTER</CODE>
+	<DT><CODE>$CHAPTER</CODE>
 	<DD>Inserts the current chapter heading.
 
 	<!-- NEED 1.5in -->
@@ -349,10 +357,11 @@ portability across platforms and for older PostScript printers:</P>
 <TR><TH>Requested Font</TH><TH>Actual Font</TH></TR>
 <TR><TD>Arial</TD><TD>Helvetica</TD></TR>
 <TR><TD>Courier</TD><TD>Courier</TD></TR>
+<TR><TD>Dingbats</TD><TD>Dingbats</TD></TR>
 <TR><TD>Helvetica</TD><TD>Helvetica</TD></TR>
-<TR><TD>Monospace</TD><TD>Courier</TD></TR>
-<TR><TD>Sans-Serif</TD><TD>Helvetica</TD></TR>
-<TR><TD>Serif</TD><TD>Times</TD></TR>
+<TR><TD>Monospace</TD><TD>DejaVu Sans Mono</TD></TR>
+<TR><TD>Sans</TD><TD>DejaVu Sans</TD></TR>
+<TR><TD>Serif</TD><TD>DejaVu Serif</TD></TR>
 <TR><TD>Symbol</TD><TD>Symbol</TD></TR>
 <TR><TD>Times</TD><TD>Times</TD></TR>
 </TABLE></CENTER>
@@ -361,7 +370,7 @@ portability across platforms and for older PostScript printers:</P>
 
 <H2><A NAME="HEADING">Headings</A></H2>
 
-<P>Currently <I>HTMLDOC</I> supports a maximum of 1000 chapters
+<P>Currently HTMLDOC supports a maximum of 1000 chapters
 (H1 headings). This limit can be increased by changing the
 <CODE>MAX_CHAPTERS</CODE> constant in the <VAR>config.h</VAR>
 file included with the source code.
@@ -432,7 +441,7 @@ the table-of-contents that is generated will show:
 <!-- NEED 4in -->
 <H3>Numbered Headings</H3>
 
-When the numbered headings option is enabled, <I>HTMLDOC</I> recognizes the
+When the numbered headings option is enabled, HTMLDOC recognizes the
 following additional attributes for all heading elements:
 
 <DL>
@@ -467,7 +476,7 @@ following additional attributes for all heading elements:
 
 <H2><A NAME="IMAGES">Images</A></H2>
 
-<I>HTMLDOC</I> supports loading of BMP, GIF, JPEG, and PNG image files.
+HTMLDOC supports loading of BMP, GIF, JPEG, and PNG image files.
 EPS and other types of image files are not supported at this
 time.
 
@@ -491,7 +500,7 @@ file from your HTML document with:
 <!-- NEED 5in -->
 <H2><A NAME="META">META Attributes</A></H2>
 
-<P><I>HTMLDOC</I> supports the following <CODE>META</CODE>
+<P>HTMLDOC supports the following <CODE>META</CODE>
 attributes for the title page and document information:
 
 <DL>
@@ -518,7 +527,7 @@ attributes for the title page and document information:
 
 <H2><A NAME="BREAKS">Page Breaks</A></H2>
 
-<I>HTMLDOC</I> supports four new <A HREF="#COMMENTS">page comments</A>
+HTMLDOC supports four new <A HREF="#COMMENTS">page comments</A>
 to specify page breaks. In addition, the older <CODE>BREAK</CODE> attribute
 is still supported by the <CODE>HR</CODE> element:
 
@@ -527,25 +536,16 @@ is still supported by the <CODE>HR</CODE> element:
 </PRE></UL>
 
 Support for the <CODE>BREAK</CODE> attribute is deprecated and will be
-removed in a future release of <I>HTMLDOC</I>.
+removed in a future release of HTMLDOC.
 
 <H2><A NAME="TABLE">Tables</A></H2>
 
-Currently <I>HTMLDOC</I> supports a maximum of 200 columns within a
+Currently HTMLDOC supports a maximum of 200 columns within a
 single table.  This limit can be increased by changing the
 <CODE>MAX_COLUMNS</CODE> constant in the <VAR>config.h</VAR> file
 included with the source code.
 
-<I>HTMLDOC</I> supports HTML 3.0 tables with the following exceptions:
-
-<UL>
-
-	<LI>The <CODE>CAPTION</CODE> element is always shown at the top
-	of the table.
-
-</UL>
-
-<P><B><I>HTMLDOC</I> does not support HTML 4.0 table elements or
+<P><B>HTMLDOC does not support HTML 4.0 table elements or
 attributes, such as <CODE>TBODY</CODE>, <CODE>THEAD</CODE>,
 <CODE>TFOOT</CODE>, or <CODE>RULES</CODE>.</B>
 

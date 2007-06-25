@@ -4,7 +4,7 @@
  *   Table of contents generator for HTMLDOC, a HTML document processing
  *   program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -16,7 +16,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -194,6 +194,16 @@ parse_tree(tree_t *t)		/* I - Document tree */
       case MARKUP_H15 :
           level = t->markup - MARKUP_H1;
 
+	  if ((level - last_level) > 1)
+	  {
+	   /*
+	    * This step necessary to keep page numbers synced up...
+	    */
+
+	    level     = last_level + 1;
+	    t->markup = (markup_t)(MARKUP_H1 + level);
+	  }
+
           if ((var = htmlGetVariable(t, (uchar *)"VALUE")) != NULL)
             heading_numbers[level] = atoi((char *)var);
           else
@@ -257,8 +267,8 @@ parse_tree(tree_t *t)		/* I - Document tree */
 
             if (i < level)
             {
-              strcat((char *)heading, ".");
-              strcat((char *)baselink, "_");
+              strlcat((char *)heading, ".", sizeof(heading));
+              strlcat((char *)baselink, "_", sizeof(baselink));
             }
           }
 
@@ -290,7 +300,7 @@ parse_tree(tree_t *t)		/* I - Document tree */
 
           if (TocNumbers)
 	  {
-            strcat((char *)heading, " ");
+            strlcat((char *)heading, " ", sizeof(heading));
 
             htmlInsertTree(t, MARKUP_NONE, heading);
 	  }
@@ -302,8 +312,18 @@ parse_tree(tree_t *t)		/* I - Document tree */
           if (level < TocLevels)
           {
             if (level > last_level)
-              heading_parents[level] = htmlAddTree(heading_parents[level - 1],
-                                                   MARKUP_UL, NULL);
+	    {
+	      if (heading_parents[last_level]->last_child && level > 1)
+        	heading_parents[level] =
+		    htmlAddTree(heading_parents[last_level]->last_child,
+                                MARKUP_UL, NULL);
+              else
+        	heading_parents[level] =
+		    htmlAddTree(heading_parents[last_level], MARKUP_UL, NULL);
+
+              DEBUG_printf(("level=%d, last_level=%d, created new UL parent %p\n",
+	                    level, last_level, heading_parents[level]));
+	    }
 
             if (level == 0)
             {
@@ -317,6 +337,8 @@ parse_tree(tree_t *t)		/* I - Document tree */
             }
             else
               parent = htmlAddTree(heading_parents[level], MARKUP_LI, NULL);
+
+            DEBUG_printf(("parent=%p\n", parent));
 
             if ((var = htmlGetVariable(t, (uchar *)"_HD_OMIT_TOC")) != NULL)
 	      htmlSetVariable(parent, (uchar *)"_HD_OMIT_TOC", var);

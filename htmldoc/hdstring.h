@@ -3,7 +3,7 @@
  *
  *   String definitions for HTMLDOC, a HTML document processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -15,7 +15,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -35,6 +35,7 @@
 #  include <stdlib.h>
 #  include <stdarg.h>
 #  include <string.h>
+#  include <ctype.h>
 
 #  ifdef HAVE_STRINGS_H
 #    include <strings.h>
@@ -54,10 +55,13 @@ extern "C" {
 #    define strncasecmp(s,t,n)	strnicmp(s,t,n)
 #    define snprintf		_snprintf
 #    define vsnprintf		_vsnprintf
-#  elif defined(__EMX__)
-#    define strcasecmp(s,t)	stricmp(s,t)
-#    define strncasecmp(s,t,n)	strnicmp(s,t,n)
-#  endif /* WIN32 || __EMX__ */
+#  endif /* WIN32 */
+
+/*
+ * Implementation of strcpy() that allows for overlapping buffers.
+ */
+
+extern void	hd_strcpy(char *dst, const char *src);
 
 
 /*
@@ -65,23 +69,42 @@ extern "C" {
  */
 
 #  ifndef HAVE_STRDUP
-extern char	*strdup(const char *s);
+extern char	*hd_strdup(const char *);
+#    define strdup hd_strdup
 #  endif /* !HAVE_STRDUP */
 
 #  ifndef HAVE_STRCASECMP
-extern int	strcasecmp(const char *s, const char *t);
+extern int	hd_strcasecmp(const char *, const char *);
+#    define strcasecmp hd_strcasecmp
 #  endif /* !HAVE_STRCASECMP */
 
 #  ifndef HAVE_STRNCASECMP
-extern int	strncasecmp(const char *s, const char *t, size_t n);
+extern int	hd_strncasecmp(const char *, const char *, size_t n);
+#    define strncasecmp hd_strncasecmp
 #  endif /* !HAVE_STRNCASECMP */
 
+#  ifndef HAVE_STRLCAT
+extern size_t hd_strlcat(char *, const char *, size_t);
+#    define strlcat hd_strlcat
+#  endif /* !HAVE_STRLCAT */
+
+#  ifndef HAVE_STRLCPY
+extern size_t hd_strlcpy(char *, const char *, size_t);
+#    define strlcpy hd_strlcpy
+#  endif /* !HAVE_STRLCPY */
+
 #  ifndef HAVE_SNPRINTF
-extern int	snprintf(char *, size_t, const char *, ...);
+extern int	hd_snprintf(char *, size_t, const char *, ...)
+#    ifdef __GNUC__
+__attribute__ ((__format__ (__printf__, 3, 4)))
+#    endif /* __GNUC__ */
+;
+#    define snprintf hd_snprintf
 #  endif /* !HAVE_SNPRINTF */
 
 #  ifndef HAVE_VSNPRINTF
-extern int	vsnprintf(char *, size_t, const char *, va_list);
+extern int	hd_vsnprintf(char *, size_t, const char *, va_list);
+#    define vsnprintf hd_vsnprintf
 #  endif /* !HAVE_VSNPRINTF */
 
 

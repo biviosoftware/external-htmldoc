@@ -4,7 +4,7 @@
  *   Progress function definitions for HTMLDOC, a HTML document
  *   processing program.
  *
- *   Copyright 1997-2002 by Easy Software Products.
+ *   Copyright 1997-2005 by Easy Software Products.
  *
  *   These coded instructions, statements, and computer programs are the
  *   property of Easy Software Products and are protected by Federal
@@ -16,7 +16,7 @@
  *       Attn: ESP Licensing Information
  *       Easy Software Products
  *       44141 Airport View Drive, Suite 204
- *       Hollywood, Maryland 20636-3111 USA
+ *       Hollywood, Maryland 20636-3142 USA
  *
  *       Voice: (301) 373-9600
  *       EMail: info@easysw.com
@@ -52,6 +52,8 @@ typedef enum
   HD_ERROR_WRITE_ERROR,
   HD_ERROR_HTML_ERROR,
   HD_ERROR_CONTENT_TOO_LARGE,
+  HD_ERROR_UNRESOLVED_LINK,
+  HD_ERROR_BAD_HF_STRING,
   HD_ERROR_HTTPBASE = 100
 } HDerror;
 
