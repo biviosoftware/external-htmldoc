@@ -6096,7 +6096,9 @@ parse_table(tree_t *t,			// I - Tree to parse
       {
 	pref_width = (col_prefs[col] - col_mins[col]) * regular_width;
 
-	if ((actual_width + pref_width) > width)
+//pjm: need slop factor, or problems occur on suse
+//	if ((actual_width + pref_width) > width)
+	if ((actual_width + pref_width) > (width + 1))
 	{
           if (col == (num_cols - 1) && (width - actual_width) >= col_mins[col])
 	    col_widths[col] = width - actual_width;
